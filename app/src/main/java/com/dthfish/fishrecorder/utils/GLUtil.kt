@@ -106,6 +106,9 @@ object GLUtil {
         )
     }
 
+    /**
+     * 需要在 gl 线程中使用
+     */
     fun createOESTextureID(): Int {
         val texture = IntArray(1)
         GLES20.glGenTextures(1, texture, 0)

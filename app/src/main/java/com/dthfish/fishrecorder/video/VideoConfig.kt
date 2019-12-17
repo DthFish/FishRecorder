@@ -32,9 +32,9 @@ class VideoConfig private constructor() {
      */
     private var gop = 1
 
-    private var width = 720
+    private var width = 1280
 
-    private var height = 1280
+    private var height = 720
     private var bitRate = 1000 * 2000
 
     private var mime = "video/avc"

@@ -74,6 +74,7 @@ object Camera1Util {
             try {
                 this.parameters = parameters
             } catch (e: Exception) {
+                e.printStackTrace()
                 this.release()
             }
         }
