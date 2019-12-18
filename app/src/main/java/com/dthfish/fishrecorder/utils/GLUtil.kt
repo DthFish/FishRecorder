@@ -2,7 +2,6 @@ package com.dthfish.fishrecorder.utils
 
 
 import android.content.Context
-import android.opengl.EGL14
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.util.Log
@@ -134,6 +133,7 @@ object GLUtil {
             GL10.GL_CLAMP_TO_EDGE
         )
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0)
+        checkEglError("createOESTextureID")
         return texture[0]
     }
 
@@ -183,12 +183,13 @@ object GLUtil {
         )
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+        checkEglError("createFrameBuffer")
     }
 
 
     fun checkEglError(msg: String) {
-        val error = EGL14.eglGetError()
-        if (error != EGL14.EGL_SUCCESS) {
+        val error = GLES20.glGetError()
+        if (error != GLES20.GL_NO_ERROR) {
             throw RuntimeException(
                 msg + " : egl error: 0x" + Integer.toHexString(error)
             )

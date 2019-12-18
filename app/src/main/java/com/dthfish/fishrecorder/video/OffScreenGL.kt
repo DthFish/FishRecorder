@@ -1,6 +1,5 @@
 package com.dthfish.fishrecorder.video
 
-import android.annotation.SuppressLint
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
@@ -28,7 +27,7 @@ class OffScreenGL(
         """.trimIndent()
         private val FRAGMENT_SHADER = """
             precision mediump float;
-            varying mediump vec2 vTextureCoord;
+            varying vec2 vTextureCoord;
             uniform sampler2D uTexture;
             void main(){
                 vec4  color = texture2D(uTexture, vTextureCoord);
@@ -49,7 +48,7 @@ class OffScreenGL(
         private val FRAGMENT_SHADER_CAMERA = """
             #extension GL_OES_EGL_image_external : require
             precision mediump float;
-            varying mediump vec2 vTextureCoord;
+            varying vec2 vTextureCoord;
             uniform samplerExternalOES uTexture;
             void main() {
                 gl_FragColor = texture2D(uTexture,vTextureCoord);
@@ -125,9 +124,9 @@ class OffScreenGL(
     }
 
     private fun onCreate() {
-        inputTextureId = GLUtil.createOESTextureID()
         cameraProgram = GLUtil.createProgram(VERTEX_SHADER_CAMERA, FRAGMENT_SHADER_CAMERA)
         GLES20.glUseProgram(cameraProgram)
+        getCameraTexture()
         cameraPositionLoc = GLES20.glGetAttribLocation(cameraProgram, "aPosition")
         cameraTextureCoordLoc = GLES20.glGetAttribLocation(cameraProgram, "aTextureCoord")
         cameraMatrixLoc = GLES20.glGetUniformLocation(cameraProgram, "uMatrix")
@@ -135,21 +134,11 @@ class OffScreenGL(
         cameraTextureLoc = GLES20.glGetUniformLocation(cameraProgram, "uTexture")
         val fb = IntArray(1)
         val ft = IntArray(1)
-        GLUtil.createFrameBuffer(
-            fb,
-            ft,
-            videoWidth,
-            videoHeight
-        )
+        GLUtil.createFrameBuffer(fb, ft, videoWidth, videoHeight)
         cameraFrameBuffer = fb[0]
         cameraFrameBufferTexture = ft[0]
 
-        GLUtil.createFrameBuffer(
-            fb,
-            ft,
-            videoWidth,
-            videoHeight
-        )
+        GLUtil.createFrameBuffer(fb, ft, videoWidth, videoHeight)
         frameBuffer = fb[0]
         frameBufferTexture = ft[0]
 
@@ -158,7 +147,7 @@ class OffScreenGL(
         positionLoc = GLES20.glGetAttribLocation(program, "aPosition")
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
-
+        GLUtil.checkEglError("onCreate")
         calculateMatrix()
     }
 
@@ -172,9 +161,11 @@ class OffScreenGL(
         // 绑定 frameBuffer 和 纹理
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, cameraFrameBuffer)
         GLES20.glUseProgram(cameraProgram)
+        // 是 GLES20.GL_TEXTURE0 还是 GLES20.GL_TEXTURE1 主要看片元着色器里面有几个纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTexture)
-        GLES20.glUniform1f(cameraTextureLoc, 0f)
+        GLES20.glUniform1i(cameraTextureLoc, 0)
+
         //启用顶点坐标和纹理坐标
         GLES20.glEnableVertexAttribArray(cameraPositionLoc)
         GLES20.glVertexAttribPointer(
@@ -220,7 +211,11 @@ class OffScreenGL(
         GLES20.glUseProgram(program)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTexture)
-        GLES20.glUniform1f(textureLoc, 0f)
+        // TMD 千万千万别把这里 glUniform1i 写成 glUniform1f，不然会有 0x502 的错误
+        // 花了我将近三天的时间排查对比代码找错，我想把自己的头打掉
+        // 另外以后出现错误及时用 GLUtil.checkEglError() 排错，
+        // opengl 的错误尽量及时抛异常查找，不断缩小范围，定位错误的代码。
+        GLES20.glUniform1i(textureLoc, 0)
         //启用顶点坐标和纹理坐标
         GLES20.glEnableVertexAttribArray(positionLoc)
         GLES20.glVertexAttribPointer(
@@ -264,10 +259,12 @@ class OffScreenGL(
         GLES20.glDeleteTextures(1, intArrayOf(frameBufferTexture), 0)
     }
 
-    @SuppressLint("Recycle")
+    @Synchronized
     fun getCameraTexture(): SurfaceTexture {
-        return cameraTexture ?: SurfaceTexture(inputTextureId).also {
-            cameraTexture = it
+        return cameraTexture ?: GLUtil.createOESTextureID().let {
+            inputTextureId = it
+            cameraTexture = SurfaceTexture(inputTextureId)
+            cameraTexture!!
         }
     }
 
@@ -295,6 +292,10 @@ class OffScreenGL(
         } else {
             MatrixUtil.rotate(matrix, 270f)
         }*/
+    }
+
+    fun makeCurrent() {
+        eglHelper.makeCurrent()
     }
 
 }

@@ -117,7 +117,7 @@ class PreviewGL(
         GLES20.glUseProgram(program)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTextureId)
-        GLES20.glUniform1f(textureLoc, 0f)
+        GLES20.glUniform1i(textureLoc, 0)
         //启用顶点坐标和纹理坐标
         GLES20.glEnableVertexAttribArray(positionLoc)
         GLES20.glVertexAttribPointer(

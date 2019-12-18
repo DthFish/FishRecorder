@@ -21,11 +21,11 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_with_filter)
+        videoRecorder = GLVideoRecorder(VideoConfig.obtainGL())
 
         textureView.keepScreenOn = true
         textureView.surfaceTextureListener = this
 
-        videoRecorder = GLVideoRecorder(VideoConfig.obtainGL())
 
     }
 

@@ -44,6 +44,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
 
         openGLThread.start()
         openGLHandler = OpenGLHandler(openGLThread.looper)
+        openGLHandler.sendMessage(openGLHandler.obtainMessage(ON_CREATE))
+
         //初始化一些配置
         drawInterval = 1000 / config.getFps()
     }
@@ -98,6 +100,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
     }
 
     companion object {
+        const val ON_CREATE = 0
         const val START_PREVIEW = 1
         const val STOP_PREVIEW = 2
         const val ON_FRAME = 3
@@ -119,19 +122,16 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
          * 这里直接创建的离屏的 egl 环境，是因为马上需要构造一个 SurfaceTexture
          * 用来获取相机的预览数据 [getCameraTexture]
          */
-        private val offScreenGL = OffScreenGL(
-            config.getWidth(), config.getHeight(),
-            config.getPreviewWidth(), config.getPreviewHeight()
-        )
+        private var offScreenGL: OffScreenGL? = null
 
         private var previewGL: PreviewGL? = null
 
         @Volatile
         private var hasFrame = false
 
-        fun getCameraTexture(): SurfaceTexture {
-            val cameraTexture = offScreenGL.getCameraTexture()
-            cameraTexture.setOnFrameAvailableListener {
+        fun getCameraTexture(): SurfaceTexture? {
+            val cameraTexture = offScreenGL?.getCameraTexture()
+            cameraTexture?.setOnFrameAvailableListener {
                 onFrameAvailable()
             }
             return cameraTexture
@@ -148,6 +148,14 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
         override fun handleMessage(msg: Message) {
 
             when (msg.what) {
+                ON_CREATE -> {
+                    if (offScreenGL == null) {
+                        offScreenGL = OffScreenGL(
+                            config.getWidth(), config.getHeight(),
+                            config.getPreviewWidth(), config.getPreviewHeight()
+                        )
+                    }
+                }
                 START_PREVIEW -> {
                     skipFrameTimeMillis = 0
                     if (previewGL == null) {
@@ -156,7 +164,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
                             config.getWidth(), config.getHeight(),
                             config.getScreenWidth(), config.getScreenHeight()
                         )
-                        previewGL?.setInputTextureId(offScreenGL.getOutputTextureId())
+                        previewGL?.setInputTextureId(offScreenGL!!.getOutputTextureId())
                     }
                 }
 
@@ -169,8 +177,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
                     Log.d(TAG, "ON_FRAME")
                     synchronized(frameCountLock) {
                         while (frameCount != 0L) {
-                            offScreenGL.updateTexImage()
-                            Log.d(TAG, "ON_FRAME after")
+                            offScreenGL?.updateTexImage()
                             frameCount--
                         }
                     }
@@ -193,9 +200,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
                     val spendTimeMillisInLoop = System.currentTimeMillis() - sendTimeMillis
 
                     val spendTimeMillisInDraw = measureTimeMillis {
-                        Log.d(TAG, "ON_DRAW before offScreen")
-                        offScreenGL.draw()
-                        Log.d(TAG, "ON_DRAW before previewGL")
+                        offScreenGL?.draw()
                         previewGL?.draw()
                     }
 
