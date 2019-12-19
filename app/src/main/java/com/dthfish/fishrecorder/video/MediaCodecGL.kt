@@ -2,19 +2,18 @@ package com.dthfish.fishrecorder.video
 
 import android.graphics.SurfaceTexture
 import android.opengl.EGLContext
+import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
-import com.dthfish.fishrecorder.utils.MatrixUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
 
 /**
  * Description
- * @param sharedContext 这个非常重要，不同的 egl 环境中要想共享纹理之类的必须保证持有同一个[EGLContext]
  * Author DthFish
- * Date  2019-12-13.
+ * Date  2019-12-19.
  */
-class PreviewGL(
+class MediaCodecGL(
     sharedContext: EGLContext?,
     videoConfig: VideoConfig,
     private var surfaceTexture: SurfaceTexture,
@@ -25,9 +24,8 @@ class PreviewGL(
             attribute vec4 aPosition;
             attribute vec2 aTextureCoord;
             varying vec2 vTextureCoord;
-            uniform mat4 uMatrix;
             void main(){
-                gl_Position= uMatrix*aPosition;
+                gl_Position= aPosition;
                 vTextureCoord = aTextureCoord;
             }
         """.trimIndent()
@@ -46,7 +44,7 @@ class PreviewGL(
     /**
      * egl 环境
      */
-    private val eglHelper = EGLHelper.obtain(sharedContext)
+    private val eglHelper = EGLHelper.obtain(sharedContext, true)
 
     //顶点坐标
     private val pos = floatArrayOf(
@@ -67,32 +65,20 @@ class PreviewGL(
     private val vertexPointBuffer = pos.toFloatBuffer()
     private val coordPointBuffer = coord.toFloatBuffer()
 
-    private val matrix = MatrixUtil.getOriginalMatrix()
-
     private var program = 0
     private var positionLoc = 0
     private var textureCoordLoc = 0
-    private var matrixLoc = 0
     private var textureLoc = 0
-
-    private var videoWidth = 0
-    private var videoHeight = 0
-    private var screenWidth = 0
-    private var screenHeight = 0
-
     init {
-
-        videoWidth = videoConfig.getWidth()
-        videoHeight = videoConfig.getHeight()
-        screenWidth = videoConfig.getScreenWidth()
-        screenHeight = videoConfig.getScreenHeight()
-        eglHelper.createScreenSurface(surfaceTexture)
+        eglHelper.createMediaCodecSurface(surfaceTexture)
         onCreate()
     }
 
     fun draw() {
         eglHelper.makeCurrent()
         onDraw()
+        //TODO
+        eglHelper.setPresentationTime(0)
         eglHelper.swapBuffers()
     }
 
@@ -103,21 +89,12 @@ class PreviewGL(
     }
 
     private fun onCreate() {
+        GLES20.glEnable(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
         program = GLUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER)
         GLES20.glUseProgram(program)
         positionLoc = GLES20.glGetAttribLocation(program, "aPosition")
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
-        matrixLoc = GLES20.glGetUniformLocation(program, "uMatrix")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
-
-        MatrixUtil.getMatrix(
-            matrix,
-            MatrixUtil.TYPE_CENTERINSIDE,
-            this.videoWidth,
-            this.videoHeight,
-            this.screenWidth,
-            this.screenHeight
-        )
     }
 
     private fun onDraw() {
@@ -147,9 +124,9 @@ class PreviewGL(
             coordPointBuffer
         )
 
-        GLES20.glUniformMatrix4fv(matrixLoc, 1, false, matrix, 0)
+//        GLES20.glUniformMatrix4fv(matrixLoc, 1, false, matrix, 0)
 
-        GLES20.glViewport(0, 0, screenWidth, screenHeight)
+//        GLES20.glViewport(0, 0, screenWidth, screenHeight)
         // draw
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
@@ -161,7 +138,7 @@ class PreviewGL(
         GLES20.glDisableVertexAttribArray(textureLoc)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         GLES20.glUseProgram(0)
-        GLUtil.checkEglError("PreviewGL onDraw")
+        GLUtil.checkEglError("MediaCodecGL onDraw")
 
     }
 

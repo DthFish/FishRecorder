@@ -17,7 +17,7 @@ import kotlin.system.measureTimeMillis
  * Author DthFish
  * Date  2019-12-10.
  */
-class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
+class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) {
     private var camera: Camera? = null
     private var isStreaming = false
     private var isRecording = false
@@ -163,10 +163,10 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
                     if (previewGL == null) {
                         previewGL = PreviewGL(
                             offScreenGL?.getSharedContext(),
+                            config,
                             msg.obj as SurfaceTexture,
-                            config
+                            offScreenGL?.getOutputTextureId() ?: 0
                         )
-                        previewGL?.setInputTextureId(offScreenGL!!.getOutputTextureId())
                     }
                 }
 
