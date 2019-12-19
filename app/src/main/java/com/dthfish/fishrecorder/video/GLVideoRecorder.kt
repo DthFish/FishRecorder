@@ -83,9 +83,9 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
     @Synchronized
     fun stopPreview() {
         if (isPreviewing) {
+            openGLHandler.sendMessage(openGLHandler.obtainMessage(STOP_PREVIEW))
             camera?.stopPreview()
             camera?.release()
-            openGLHandler.sendMessage(openGLHandler.obtainMessage(STOP_PREVIEW))
             isPreviewing = false
         }
 
@@ -96,6 +96,10 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
     }
 
     fun stopRecording() {
+
+    }
+
+    fun destroy() {
 
     }
 
@@ -150,32 +154,36 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
             when (msg.what) {
                 ON_CREATE -> {
                     if (offScreenGL == null) {
-                        offScreenGL = OffScreenGL(
-                            config.getWidth(), config.getHeight(),
-                            config.getPreviewWidth(), config.getPreviewHeight()
-                        )
+                        offScreenGL = OffScreenGL(config)
                     }
                 }
                 START_PREVIEW -> {
+                    Log.d(TAG, "START_PREVIEW")
                     skipFrameTimeMillis = 0
                     if (previewGL == null) {
                         previewGL = PreviewGL(
+                            offScreenGL?.getSharedContext(),
                             msg.obj as SurfaceTexture,
-                            config.getWidth(), config.getHeight(),
-                            config.getScreenWidth(), config.getScreenHeight()
+                            config
                         )
                         previewGL?.setInputTextureId(offScreenGL!!.getOutputTextureId())
                     }
                 }
 
                 STOP_PREVIEW -> {
+                    Log.d(TAG, "STOP_PREVIEW skipFrameTimeMillis=$skipFrameTimeMillis")
                     previewGL?.destroy()
                     previewGL = null
+                    removeCallbacksAndMessages(null)
+                    synchronized(frameCountLock) {
+                        frameCount = 0
+                    }
                 }
-
                 ON_FRAME -> {
                     Log.d(TAG, "ON_FRAME")
                     synchronized(frameCountLock) {
+                        // 这里必须要有，不然会是黑屏
+                        offScreenGL?.makeCurrent()
                         while (frameCount != 0L) {
                             offScreenGL?.updateTexImage()
                             frameCount--
@@ -185,6 +193,9 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtain()) {
 
                 }
                 ON_DRAW -> {
+                    if (!isPreviewing) {
+                        return
+                    }
                     if (!hasFrame) {
                         sendMessageDelayed(
                             obtainMessage(

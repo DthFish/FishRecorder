@@ -1,20 +1,20 @@
 package com.dthfish.fishrecorder.video
 
 import android.graphics.SurfaceTexture
+import android.opengl.EGLContext
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
-import android.util.Log
-import com.dthfish.fishrecorder.utils.*
+import com.dthfish.fishrecorder.utils.EGLHelper
+import com.dthfish.fishrecorder.utils.GLUtil
+import com.dthfish.fishrecorder.utils.MatrixUtil
+import com.dthfish.fishrecorder.utils.toFloatBuffer
 
 /**
  * Description
  * Author DthFish
  * Date  2019-12-13.
  */
-class OffScreenGL(
-    private val videoWidth: Int, private val videoHeight: Int,
-    private val previewWidth: Int, private val previewHeight: Int
-) {
+class OffScreenGL(videoConfig: VideoConfig) {
     companion object {
         private val VERTEX_SHADER = """
             attribute vec4 aPosition;
@@ -105,8 +105,16 @@ class OffScreenGL(
      * 与 [frameBuffer] 关联的纹理 id
      */
     private var frameBufferTexture = 0
+    private var videoWidth = 0
+    private var videoHeight = 0
+    private var previewWidth = 0
+    private var previewHeight = 0
 
     init {
+        videoWidth = videoConfig.getWidth()
+        videoHeight = videoConfig.getHeight()
+        previewWidth = videoConfig.getPreviewWidth()
+        previewHeight = videoConfig.getPreviewHeight()
         eglHelper.createOffScreenSurface(videoWidth, videoHeight)
         onCreate()
     }
@@ -148,9 +156,16 @@ class OffScreenGL(
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
         GLUtil.checkEglError("onCreate")
-        calculateMatrix()
-    }
 
+        MatrixUtil.getMatrix(
+            cameraMatrix,
+            MatrixUtil.TYPE_CENTERCROP,
+            this.previewWidth,
+            this.previewHeight,
+            this.videoWidth,
+            this.videoHeight
+        )
+    }
 
     private fun onDraw() {
         onDrawCameraFrameBuffer(inputTextureId)
@@ -164,6 +179,10 @@ class OffScreenGL(
         // 是 GLES20.GL_TEXTURE0 还是 GLES20.GL_TEXTURE1 主要看片元着色器里面有几个纹理
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, inputTexture)
+        // TMD 千万千万别把这里 glUniform1i 写成 glUniform1f，不然会有 0x502 的错误
+        // 花了我将近三天的时间排查对比代码找错，我想把自己的头打掉
+        // 另外以后出现错误及时用 GLUtil.checkEglError() 排错，
+        // opengl 的错误尽量及时抛异常查找，不断缩小范围，定位错误的代码。
         GLES20.glUniform1i(cameraTextureLoc, 0)
 
         //启用顶点坐标和纹理坐标
@@ -203,6 +222,8 @@ class OffScreenGL(
         GLES20.glUseProgram(0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
         GLUtil.checkEglError("onDrawCameraFrameBuffer")
+
+
     }
 
     private fun onDrawFrameBuffer(inputTexture: Int) {
@@ -211,10 +232,7 @@ class OffScreenGL(
         GLES20.glUseProgram(program)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, inputTexture)
-        // TMD 千万千万别把这里 glUniform1i 写成 glUniform1f，不然会有 0x502 的错误
-        // 花了我将近三天的时间排查对比代码找错，我想把自己的头打掉
-        // 另外以后出现错误及时用 GLUtil.checkEglError() 排错，
-        // opengl 的错误尽量及时抛异常查找，不断缩小范围，定位错误的代码。
+
         GLES20.glUniform1i(textureLoc, 0)
         //启用顶点坐标和纹理坐标
         GLES20.glEnableVertexAttribArray(positionLoc)
@@ -240,6 +258,7 @@ class OffScreenGL(
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+
         // 解绑
         GLES20.glFinish()
         GLES20.glDisableVertexAttribArray(positionLoc)
@@ -268,6 +287,18 @@ class OffScreenGL(
         }
     }
 
+    fun makeCurrent() {
+        eglHelper.makeCurrent()
+    }
+
+    fun getSharedContext(): EGLContext? {
+        return eglHelper.getContext()
+    }
+
+
+    /**
+     * 调用前需要调用 [makeCurrent]
+     */
     fun updateTexImage() {
         cameraTexture?.updateTexImage()
     }
@@ -275,27 +306,4 @@ class OffScreenGL(
     fun getOutputTextureId(): Int {
         return frameBufferTexture
     }
-
-    private fun calculateMatrix() {
-        MatrixUtil.getMatrix(
-            cameraMatrix,
-            MatrixUtil.TYPE_CENTERCROP,
-            this.previewWidth,
-            this.previewHeight,
-            this.videoWidth,
-            this.videoHeight
-        )
-        // TODO
-        /*if (cameraId == 1) {
-            MatrixUtil.flip(matrix, x = true, y = false)
-            MatrixUtil.rotate(matrix, 90f)
-        } else {
-            MatrixUtil.rotate(matrix, 270f)
-        }*/
-    }
-
-    fun makeCurrent() {
-        eglHelper.makeCurrent()
-    }
-
 }

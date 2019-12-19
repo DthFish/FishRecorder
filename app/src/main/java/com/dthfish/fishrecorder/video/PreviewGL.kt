@@ -1,6 +1,7 @@
 package com.dthfish.fishrecorder.video
 
 import android.graphics.SurfaceTexture
+import android.opengl.EGLContext
 import android.opengl.GLES20
 import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
@@ -9,13 +10,14 @@ import com.dthfish.fishrecorder.utils.toFloatBuffer
 
 /**
  * Description
+ * @param sharedContext 这个非常重要，不同的 egl 环境中要想共享纹理之类的必须保证持有同一个[EGLContext]
  * Author DthFish
  * Date  2019-12-13.
  */
 class PreviewGL(
+    sharedContext: EGLContext?,
     private var surfaceTexture: SurfaceTexture,
-    private val videoWidth: Int, private val videoHeight: Int,
-    private var screenWidth: Int, private var screenHeight: Int
+    videoConfig: VideoConfig
 ) {
     companion object {
         private val VERTEX_SHADER = """
@@ -31,11 +33,10 @@ class PreviewGL(
 
         private val FRAGMENT_SHADER = """
             precision mediump float;
-            varying mediump vec2 vTextureCoord;
+            varying vec2 vTextureCoord;
             uniform sampler2D uTexture;
             void main(){
-                vec4 color = texture2D(uTexture, vTextureCoord);
-                gl_FragColor = color;
+                gl_FragColor = texture2D(uTexture, vTextureCoord);
             }
         """.trimIndent()
 
@@ -44,7 +45,7 @@ class PreviewGL(
     /**
      * egl 环境
      */
-    private val eglHelper = EGLHelper.obtain()
+    private val eglHelper = EGLHelper.obtain(sharedContext)
     private var inputTextureId = 0
 
     //顶点坐标
@@ -74,7 +75,17 @@ class PreviewGL(
     private var matrixLoc = 0
     private var textureLoc = 0
 
+    private var videoWidth = 0
+    private var videoHeight = 0
+    private var screenWidth = 0
+    private var screenHeight = 0
+
     init {
+
+        videoWidth = videoConfig.getWidth()
+        videoHeight = videoConfig.getHeight()
+        screenWidth = videoConfig.getScreenWidth()
+        screenHeight = videoConfig.getScreenHeight()
         eglHelper.createScreenSurface(surfaceTexture)
         onCreate()
     }
@@ -110,7 +121,6 @@ class PreviewGL(
         )
     }
 
-
     private fun onDraw() {
 
         // 绑定纹理
@@ -145,12 +155,14 @@ class PreviewGL(
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+
         // 解绑
         GLES20.glFinish()
         GLES20.glDisableVertexAttribArray(positionLoc)
         GLES20.glDisableVertexAttribArray(textureLoc)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         GLES20.glUseProgram(0)
+        GLUtil.checkEglError("PreviewGL onDraw")
 
     }
 

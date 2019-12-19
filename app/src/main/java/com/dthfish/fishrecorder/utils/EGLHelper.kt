@@ -5,7 +5,6 @@ import android.opengl.*
 import android.util.Log
 import android.view.Surface
 import com.dthfish.fishrecorder.utils.GLUtil.checkEglError
-import javax.microedition.khronos.egl.EGL10
 
 /**
  * Description
@@ -29,14 +28,14 @@ class EGLHelper private constructor() {
          */
         const val FLAG_TRY_GLES3 = 0x02
 
-        fun obtain(isCodec: Boolean = false): EGLHelper {
+        fun obtain(sharedContext: EGLContext? = null, isCodec: Boolean = false): EGLHelper {
             val eglHelper = EGLHelper()
             val flags = if (isCodec) {
-                FLAG_TRY_GLES3
-            } else {
                 FLAG_TRY_GLES3 or FLAG_RECORDABLE
+            } else {
+                FLAG_TRY_GLES3
             }
-            eglHelper.init(null, flags)
+            eglHelper.init(sharedContext, flags)
             return eglHelper
         }
 
@@ -232,6 +231,10 @@ class EGLHelper private constructor() {
             return null
         }
         return configs[0]
+    }
+
+    fun getContext(): EGLContext? {
+        return eglContext
     }
 
 }
