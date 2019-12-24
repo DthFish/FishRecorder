@@ -18,14 +18,33 @@ import java.nio.ByteBuffer
  */
 object TestUtil {
 
+    private var activity: AppCompatActivity? = null
+
+    private var callTimes = 0L
+
+    fun reset(activity: AppCompatActivity) {
+        this.activity = activity
+        callTimes = 0L
+    }
+
+    fun clear() {
+        activity = null
+    }
+
     /**
      * 用于测试离屏缓冲
      */
     fun captureFrame(
-        activity: AppCompatActivity,
         width: Int,
         height: Int
     ) {
+
+        if (callTimes != 100L) {
+            callTimes++
+            return
+        }
+        callTimes++
+
         val bytes = ByteBuffer.allocate(
             width *
                     height * 4
@@ -38,7 +57,7 @@ object TestUtil {
         Thread(Runnable {
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             bitmap.copyPixelsFromBuffer(bytes)
-            saveBitmap(activity, bitmap)
+            saveBitmap(activity!!, bitmap)
             bitmap.recycle()
         }).start()
 

@@ -1,5 +1,6 @@
 package com.dthfish.fishrecorder.video
 
+import android.content.res.Configuration
 import android.graphics.ImageFormat
 import android.hardware.Camera
 import android.media.MediaCodecInfo
@@ -32,9 +33,12 @@ class VideoConfig private constructor() {
      */
     private var gop = 1
 
-    private var width = 1280
+    private var width = 720
 
-    private var height = 720
+    private var height = 1280
+
+    private var orientation = Configuration.ORIENTATION_PORTRAIT
+
     private var bitRate = 1000 * 2000
 
     private var mime = "video/avc"
@@ -188,6 +192,14 @@ class VideoConfig private constructor() {
 
     fun getScreenHeight(): Int {
         return screenHeight
+    }
+
+    fun setOriention(oriention: Int) {
+        this.orientation = orientation
+    }
+
+    fun getOriention(): Int {
+        return orientation
     }
 
 }

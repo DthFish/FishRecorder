@@ -157,21 +157,21 @@ object GLUtil {
             GLES20.GL_UNSIGNED_BYTE,
             null
         )
-        GLES20.glTexParameterf(
+        GLES20.glTexParameteri(
             GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat()
+            GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR
         )
-        GLES20.glTexParameterf(
+        GLES20.glTexParameteri(
             GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR.toFloat()
+            GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR
         )
-        GLES20.glTexParameterf(
+        GLES20.glTexParameteri(
             GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE.toFloat()
+            GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE
         )
-        GLES20.glTexParameterf(
+        GLES20.glTexParameteri(
             GLES20.GL_TEXTURE_2D,
-            GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE.toFloat()
+            GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE
         )
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBuffer[0])
         GLES20.glFramebufferTexture2D(
