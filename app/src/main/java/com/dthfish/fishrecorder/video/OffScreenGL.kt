@@ -4,6 +4,7 @@ import android.graphics.SurfaceTexture
 import android.opengl.EGLContext
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import android.util.Log
 import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.MatrixUtil
@@ -109,12 +110,14 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
     private var videoHeight = 0
     private var previewWidth = 0
     private var previewHeight = 0
+    private var rotateAngle = 0f
 
     init {
         videoWidth = videoConfig.getWidth()
         videoHeight = videoConfig.getHeight()
-        previewWidth = videoConfig.getPreviewWidth()
-        previewHeight = videoConfig.getPreviewHeight()
+        previewWidth = videoConfig.getPreviewWidthForGL()
+        previewHeight = videoConfig.getPreviewHeightForGL()
+        rotateAngle = videoConfig.getDisplayDegree().toFloat()
         eglHelper.createOffScreenSurface(videoWidth, videoHeight)
         onCreate()
     }
@@ -161,13 +164,18 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         MatrixUtil.getMatrix(
             cameraMatrix,
             MatrixUtil.TYPE_CENTERCROP,
-            this.previewHeight,
             this.previewWidth,
+            this.previewHeight,
             this.videoWidth,
             this.videoHeight
         )
+        Log.d(
+            "Camera1",
+            "previewWidthForGL=${this.previewWidth},previewHeightForGL=${this.previewHeight}"
+        )
+        Log.d("Camera1", "videoWidth=${this.videoWidth},videoHeight=${this.videoHeight}")
 
-        MatrixUtil.rotate(cameraMatrix, 270f)
+        MatrixUtil.rotate(cameraMatrix, rotateAngle)
         MatrixUtil.flip(cameraMatrix, x = false, y = true)
 
         /*MatrixUtil.getMatrix(

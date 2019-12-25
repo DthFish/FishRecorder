@@ -28,16 +28,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
 
         val config = VideoConfig.obtainGL()
         val rotation = windowManager.defaultDisplay.rotation
-
-        var screenDegree = 0
-        when (rotation) {
-            Surface.ROTATION_0 -> screenDegree = 0
-            Surface.ROTATION_90 -> screenDegree = 90
-            Surface.ROTATION_180 -> screenDegree = 180
-            Surface.ROTATION_270 -> screenDegree = 270
-        }
-        Log.d("Camera1", "screen degree=$screenDegree")
-        config.setScreenDegree(screenDegree)
+        config.calculateScreenDegree(rotation)
         videoRecorder = GLVideoRecorder(config)
 
         textureView.keepScreenOn = true

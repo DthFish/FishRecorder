@@ -1,9 +1,9 @@
 package com.dthfish.fishrecorder.video
 
-import android.content.res.Configuration
 import android.graphics.ImageFormat
 import android.hardware.Camera
 import android.media.MediaCodecInfo
+import android.view.Surface
 
 class VideoConfig private constructor() {
     companion object {
@@ -32,18 +32,23 @@ class VideoConfig private constructor() {
      * Group Of Pictures,也可以理解为关键帧频率
      */
     private var gop = 1
-
     private var width = 720
 
     private var height = 1280
-
+    /**
+     * 屏幕方向
+     */
     private var screenDegree = 0
+    /**
+     * 经过 Camera 和 [screenDegree] 计算得到展示的时候需要旋转的角度
+     */
+    private var displayDegree = 0
 
     private var bitRate = 1000 * 2000
 
     private var mime = "video/avc"
 
-    private var defaultCamera = Camera.CameraInfo.CAMERA_FACING_BACK
+    private var defaultCamera = Camera.CameraInfo.CAMERA_FACING_FRONT
 
     /**
      * 预留给录屏使用
@@ -142,16 +147,47 @@ class VideoConfig private constructor() {
         this.previewWidth = width
     }
 
+    /**
+     * 用来设置给相机预览
+     */
     fun getPreviewWidth(): Int {
         return previewWidth
+    }
+
+    /**
+     * 用来设置给 OpenGL 进行矩阵变换
+     */
+    fun getPreviewWidthForGL(): Int {
+        return when (screenDegree) {
+            0, 180 -> {
+                previewHeight
+            }
+            else -> previewWidth
+        }
     }
 
     fun setPreviewHeight(height: Int) {
         this.previewHeight = height
     }
 
+    /**
+     * 用来设置给相机预览
+     */
     fun getPreviewHeight(): Int {
         return previewHeight
+    }
+
+    /**
+     * 用来设置给 OpenGL 进行矩阵变换
+     */
+    fun getPreviewHeightForGL(): Int {
+
+        return when (screenDegree) {
+            0, 180 -> {
+                previewWidth
+            }
+            else -> previewHeight
+        }
     }
 
     fun setPreviewFormat(colorFormat: Int) {
@@ -194,12 +230,31 @@ class VideoConfig private constructor() {
         return screenHeight
     }
 
-    fun setScreenDegree(screenDegree: Int) {
+    fun calculateScreenDegree(rotation: Int) {
+        var screenDegree = 0
+        when (rotation) {
+            Surface.ROTATION_0 -> screenDegree = 0
+            Surface.ROTATION_90 -> screenDegree = 90
+            Surface.ROTATION_180 -> screenDegree = 180
+            Surface.ROTATION_270 -> screenDegree = 270
+        }
+        setScreenDegree(screenDegree)
+    }
+
+    private fun setScreenDegree(screenDegree: Int) {
         this.screenDegree = screenDegree
     }
 
     fun getScreenDegree(): Int {
         return screenDegree
+    }
+
+    fun setDisplayDegree(displayDegree: Int) {
+        this.displayDegree = displayDegree
+    }
+
+    fun getDisplayDegree(): Int {
+        return displayDegree
     }
 
 }

@@ -36,7 +36,44 @@ object Camera1Util {
                 config.setPreviewWidth(width)
                 config.setPreviewHeight(height)
             }*/
-            // 方案3
+
+            // 方案3 这个才是正解
+            val targetWidth: Int
+            val targetHeight: Int
+            when (config.getScreenDegree()) {
+                //竖屏
+                0, 180 -> {
+                    targetWidth = config.getHeight()
+                    targetHeight = config.getWidth()
+                }
+                else -> {
+                    targetWidth = config.getWidth()
+                    targetHeight = config.getHeight()
+                }
+            }
+
+            previewsSizes.firstOrNull {
+                it.width >= targetWidth && it.height >= targetHeight
+            }?.apply {
+                Log.d("Camera1", "Camera preview selected width=$width, height=$height")
+                config.setPreviewWidth(width)
+                config.setPreviewHeight(height)
+            }
+
+            // 计算给 OpenGL 矩阵旋转的角度
+            val cameraInfo = Camera.CameraInfo()
+            Camera.getCameraInfo(config.getDefaultCamera(), cameraInfo)
+            val displayDegree = if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                (cameraInfo.orientation + config.getScreenDegree()) % 360
+            } else {
+                (360 - cameraInfo.orientation + config.getScreenDegree()) % 360
+            }
+            Log.d(
+                "Camera1", "Screen degree=${config.getScreenDegree()}" +
+                        ",Camera orientation=${cameraInfo.orientation}"
+            )
+            Log.d("Camera1", "Display degree=$displayDegree")
+            config.setDisplayDegree(displayDegree)
 
 
             // 查找 fps
@@ -78,7 +115,8 @@ object Camera1Util {
     fun applyPreviewParams(camera: Camera, config: VideoConfig) {
 
         camera.apply {
-
+            // 这里不进行方向调整，方向调整放到 OffScreenGL,见 VideoConfig displayDegree 字段
+            /*
             val cameraInfo = Camera.CameraInfo()
             Camera.getCameraInfo(config.getDefaultCamera(), cameraInfo)
 
@@ -91,7 +129,8 @@ object Camera1Util {
             } else {
                 displayOrientation = (cameraInfo.orientation - config.getScreenDegree() + 360) % 360
             }
-//            camera.setDisplayOrientation(displayOrientation)
+            camera.setDisplayOrientation(displayOrientation)
+            */
 
 
             val parameters = this.parameters
