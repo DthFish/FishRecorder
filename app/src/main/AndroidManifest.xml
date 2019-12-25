@@ -38,7 +38,8 @@
         <activity android:name=".ui.RecordWaveActivity" />
         <activity android:name=".ui.RecordAacActivity" />
 
-        <activity android:name=".RecordWidthFilterActivity" />
+        <activity android:name=".RecordWidthFilterActivity"
+            android:theme="@style/FullScreen"/>
         <activity android:name=".RecordByCaptureActivity" />
         <activity android:name=".RecordByCameraActivity" />
     </application>
