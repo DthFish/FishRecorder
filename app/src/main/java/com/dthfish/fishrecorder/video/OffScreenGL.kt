@@ -14,7 +14,7 @@ import com.dthfish.fishrecorder.utils.toFloatBuffer
  * Author DthFish
  * Date  2019-12-13.
  */
-class OffScreenGL(videoConfig: VideoConfig) {
+class OffScreenGL(private val videoConfig: VideoConfig) {
     companion object {
         private val VERTEX_SHADER = """
             attribute vec4 aPosition;
@@ -42,7 +42,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
             varying vec2 vTextureCoord;
             void main(){
                 gl_Position= uMatrix*aPosition;
-                vTextureCoord = (uTextureMatrix*vec4(aTextureCoord,0,1)).xy;
+                vTextureCoord = (uTextureMatrix*vec4(aTextureCoord,1,1)).xy;
             }
         """.trimIndent()
         private val FRAGMENT_SHADER_CAMERA = """
@@ -157,14 +157,31 @@ class OffScreenGL(videoConfig: VideoConfig) {
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
         GLUtil.checkEglError("onCreate")
 
+
         MatrixUtil.getMatrix(
             cameraMatrix,
             MatrixUtil.TYPE_CENTERCROP,
-            this.previewWidth,
             this.previewHeight,
+            this.previewWidth,
             this.videoWidth,
             this.videoHeight
         )
+
+        MatrixUtil.rotate(cameraMatrix, 270f)
+        MatrixUtil.flip(cameraMatrix, x = false, y = true)
+
+        /*MatrixUtil.getMatrix(
+            cameraMatrix,
+            MatrixUtil.TYPE_CENTERCROP,
+            this.previewHeight,
+            this.previewWidth,
+            this.videoWidth,
+            this.videoHeight
+        )
+
+        MatrixUtil.rotate(cameraMatrix, 90f)
+        MatrixUtil.flip(cameraMatrix, x = true, y = false)*/
+
     }
 
     private fun onDraw() {
@@ -192,7 +209,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
             2,
             GLES20.GL_FLOAT,
             false,
-            0,
+            2 * 4,
             vertexPointBuffer
         )
         GLES20.glEnableVertexAttribArray(cameraTextureCoordLoc)
@@ -201,7 +218,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
             2,
             GLES20.GL_FLOAT,
             false,
-            0,
+            2 * 4,
             coordPointBuffer
         )
 
@@ -241,7 +258,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
             2,
             GLES20.GL_FLOAT,
             false,
-            0,
+            2 * 4,
             vertexPointBuffer
         )
         GLES20.glEnableVertexAttribArray(textureCoordLoc)
@@ -250,7 +267,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
             2,
             GLES20.GL_FLOAT,
             false,
-            0,
+            2 * 4,
             coordPointBuffer
         )
         GLES20.glViewport(0, 0, videoWidth, videoHeight)
@@ -258,6 +275,7 @@ class OffScreenGL(videoConfig: VideoConfig) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+//        TestUtil.captureFrame(videoWidth, videoHeight)
 
         // 解绑
         GLES20.glFinish()

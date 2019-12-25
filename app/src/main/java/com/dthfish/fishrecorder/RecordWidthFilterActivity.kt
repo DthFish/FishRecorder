@@ -3,6 +3,7 @@ package com.dthfish.fishrecorder
 import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.util.Log
+import android.view.Surface
 import android.view.TextureView
 import androidx.appcompat.app.AppCompatActivity
 import com.dthfish.fishrecorder.utils.TAG
@@ -26,12 +27,21 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         TestUtil.reset(this)
 
         val config = VideoConfig.obtainGL()
-        config.setOriention(resources.configuration.orientation)
+        val rotation = windowManager.defaultDisplay.rotation
+
+        var screenDegree = 0
+        when (rotation) {
+            Surface.ROTATION_0 -> screenDegree = 0
+            Surface.ROTATION_90 -> screenDegree = 90
+            Surface.ROTATION_180 -> screenDegree = 180
+            Surface.ROTATION_270 -> screenDegree = 270
+        }
+        Log.d("Camera1", "screen degree=$screenDegree")
+        config.setScreenDegree(screenDegree)
         videoRecorder = GLVideoRecorder(config)
 
         textureView.keepScreenOn = true
         textureView.surfaceTextureListener = this
-
 
     }
 

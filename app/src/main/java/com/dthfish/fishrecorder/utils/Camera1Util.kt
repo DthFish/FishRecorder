@@ -2,6 +2,7 @@ package com.dthfish.fishrecorder.utils
 
 import android.graphics.ImageFormat
 import android.hardware.Camera
+import android.util.Log
 import com.dthfish.fishrecorder.video.VideoConfig
 import kotlin.math.abs
 
@@ -19,12 +20,24 @@ object Camera1Util {
             previewsSizes.sortWith(Comparator { size1, size2 ->
                 size1.width * size1.height - size2.width * size2.height
             })
-            previewsSizes.firstOrNull {
+
+            // 方案1 直接选取宽高略大于目标的预览宽高
+            /*previewsSizes.firstOrNull {
                 it.width >= config.getWidth() && it.height >= config.getHeight()
             }?.apply {
+                Log.d("Camera1", "Camera preview selected width=$width, height=$height")
                 config.setPreviewWidth(width)
                 config.setPreviewHeight(height)
-            }
+            }*/
+
+            // 方案2 直接选取宽高最大的预览宽高
+            /*previewsSizes.lastOrNull()?.apply {
+                Log.d(TAG, "Camera preview selected width=$width, height=$height")
+                config.setPreviewWidth(width)
+                config.setPreviewHeight(height)
+            }*/
+            // 方案3
+
 
             // 查找 fps
             val previewFpsRange = parameters.supportedPreviewFpsRange
@@ -35,6 +48,7 @@ object Camera1Util {
                 l - r
             })
             previewFpsRange.firstOrNull()?.apply {
+                Log.d("Camera1", "Camera preview selected minFps=${this[0]}, maxFps=$${this[1]}")
                 config.setPreviewMinFps(this[0])
                 config.setPreviewMaxFps(this[1])
             }
@@ -45,9 +59,17 @@ object Camera1Util {
 
             // 查找支持的 format
             val previewFormats = parameters.supportedPictureFormats
+
+            previewFormats?.forEach { it ->
+                Log.d("Camera1", "format =$it")
+            }
             previewFormats.firstOrNull {
                 it == ImageFormat.NV21 || it == ImageFormat.YV12
             }?.apply {
+                Log.d(
+                    "Camera1",
+                    "Camera preview selected previewFormat=${if (this == ImageFormat.NV21) "NV21" else "YV12"}"
+                )
                 config.setPreviewFormat(this)
             }
         }
@@ -56,6 +78,22 @@ object Camera1Util {
     fun applyPreviewParams(camera: Camera, config: VideoConfig) {
 
         camera.apply {
+
+            val cameraInfo = Camera.CameraInfo()
+            Camera.getCameraInfo(config.getDefaultCamera(), cameraInfo)
+
+            Log.d("Camera1", "camera orientation=" + cameraInfo.orientation)
+            var displayOrientation: Int
+            if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                displayOrientation = (cameraInfo.orientation + config.getScreenDegree()) % 360
+                displayOrientation =
+                    (360 - displayOrientation) % 360          // compensate the mirror
+            } else {
+                displayOrientation = (cameraInfo.orientation - config.getScreenDegree() + 360) % 360
+            }
+//            camera.setDisplayOrientation(displayOrientation)
+
+
             val parameters = this.parameters
             parameters.whiteBalance = Camera.Parameters.WHITE_BALANCE_AUTO
             val focusModes = parameters.supportedFocusModes

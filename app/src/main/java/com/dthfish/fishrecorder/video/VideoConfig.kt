@@ -37,7 +37,7 @@ class VideoConfig private constructor() {
 
     private var height = 1280
 
-    private var orientation = Configuration.ORIENTATION_PORTRAIT
+    private var screenDegree = 0
 
     private var bitRate = 1000 * 2000
 
@@ -194,12 +194,12 @@ class VideoConfig private constructor() {
         return screenHeight
     }
 
-    fun setOriention(oriention: Int) {
-        this.orientation = orientation
+    fun setScreenDegree(screenDegree: Int) {
+        this.screenDegree = screenDegree
     }
 
-    fun getOriention(): Int {
-        return orientation
+    fun getScreenDegree(): Int {
+        return screenDegree
     }
 
 }

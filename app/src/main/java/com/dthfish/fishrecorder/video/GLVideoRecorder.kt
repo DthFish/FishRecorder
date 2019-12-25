@@ -33,7 +33,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         //初始化一些 camera 的信息
         try {
             camera = Camera.open(config.getDefaultCamera())
-            camera?.setDisplayOrientation(0)
+
         } catch (e: Exception) {
             e.printStackTrace()
         }
