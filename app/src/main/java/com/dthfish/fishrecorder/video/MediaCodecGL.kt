@@ -1,6 +1,5 @@
 package com.dthfish.fishrecorder.video
 
-import android.graphics.SurfaceTexture
 import android.opengl.EGLContext
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
@@ -16,7 +15,6 @@ import com.dthfish.fishrecorder.utils.toFloatBuffer
 class MediaCodecGL(
     sharedContext: EGLContext?,
     videoConfig: VideoConfig,
-    private var surfaceTexture: SurfaceTexture,
     private var inputTextureId: Int
 ) {
     companion object {
@@ -69,8 +67,11 @@ class MediaCodecGL(
     private var positionLoc = 0
     private var textureCoordLoc = 0
     private var textureLoc = 0
+
     init {
-        eglHelper.createMediaCodecSurface(surfaceTexture)
+
+        val mediaCodec = videoConfig.createMediaCodec()!!
+        eglHelper.createMediaCodecSurface(mediaCodec.createInputSurface())
         onCreate()
     }
 

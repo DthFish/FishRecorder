@@ -2,7 +2,9 @@ package com.dthfish.fishrecorder.video
 
 import android.graphics.ImageFormat
 import android.hardware.Camera
+import android.media.MediaCodec
 import android.media.MediaCodecInfo
+import android.media.MediaFormat
 import android.view.Surface
 
 class VideoConfig private constructor() {
@@ -255,6 +257,30 @@ class VideoConfig private constructor() {
 
     fun getDisplayDegree(): Int {
         return displayDegree
+    }
+
+    fun createMediaCodec(): MediaCodec? {
+        val mediaFormat = MediaFormat()
+        mediaFormat.setString(MediaFormat.KEY_MIME, getMime())
+        mediaFormat.setInteger(MediaFormat.KEY_WIDTH, getWidth())
+        mediaFormat.setInteger(MediaFormat.KEY_HEIGHT, getHeight())
+        mediaFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, getColorFormat())
+        mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, width * height * 5)
+        mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, getFps())
+        mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, getGop())
+        var mediaCodec: MediaCodec? = null
+        try {
+            mediaCodec = MediaCodec.createEncoderByType(getMime())
+            mediaCodec.configure(
+                mediaFormat,
+                null,
+                null,
+                MediaCodec.CONFIGURE_FLAG_ENCODE
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return mediaCodec
     }
 
 }

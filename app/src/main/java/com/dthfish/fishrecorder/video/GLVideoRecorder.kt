@@ -19,7 +19,12 @@ import kotlin.system.measureTimeMillis
  */
 class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) {
     private var camera: Camera? = null
-    private var isStreaming = false
+
+    /**
+     * 是否在录制和是否在预览的逻辑相互独立，
+     * 在录制的时候也可以不看预览画面
+     */
+    @Volatile
     private var isRecording = false
     @Volatile
     private var isPreviewing = false
@@ -53,28 +58,25 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
     @Synchronized
     fun startPreview(surface: SurfaceTexture, width: Int, height: Int) {
+        if (isPreviewing) return
         config.setScreenWidth(width)
         config.setScreenHeight(height)
-
-        if (!(isRecording || isStreaming || isPreviewing)) {
-
-            try {
-                val cameraTexture = openGLHandler.getCameraTexture()
-                camera?.setPreviewTexture(cameraTexture)
-            } catch (e: IOException) {
-                e.printStackTrace()
-                camera?.release()
-                return
-            }
-            camera?.startPreview()
-        }
-
+        if (!checkAndStart()) return
         openGLHandler.sendMessage(openGLHandler.obtainMessage(START_PREVIEW, surface))
-        openGLHandler.sendMessage(openGLHandler.obtainMessage(ON_DRAW, System.currentTimeMillis()))
+        // 如果 startRecording 里面启动了 ON_DRAW 则这里不用再调用
+        if (!isRecording) {
+            openGLHandler.sendMessage(
+                openGLHandler.obtainMessage(
+                    ON_DRAW,
+                    System.currentTimeMillis()
+                )
+            )
+        }
         isPreviewing = true
 
     }
 
+    @Synchronized
     fun updatePreview(width: Int, height: Int) {
         config.setScreenWidth(width)
         config.setScreenHeight(height)
@@ -84,23 +86,63 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
     fun stopPreview() {
         if (isPreviewing) {
             openGLHandler.sendMessage(openGLHandler.obtainMessage(STOP_PREVIEW))
-            camera?.stopPreview()
-            camera?.release()
+            if (!isRecording) {
+                camera?.stopPreview()
+            }
             isPreviewing = false
         }
 
     }
 
+    @Synchronized
     fun startRecording() {
+        if (isRecording) return
+        if (!checkAndStart()) return
 
+        openGLHandler.sendMessage(openGLHandler.obtainMessage(START_RECORD))
+        // 如果 startPreview 里面启动了 ON_DRAW 则这里不用再调用
+        if (!isPreviewing) {
+            openGLHandler.sendMessage(
+                openGLHandler.obtainMessage(
+                    ON_DRAW,
+                    System.currentTimeMillis()
+                )
+            )
+        }
+
+        isRecording = true
     }
 
+    private fun checkAndStart(): Boolean {
+        if (!(isRecording || isPreviewing)) {
+            try {
+                val cameraTexture = openGLHandler.getCameraTexture()
+                camera?.setPreviewTexture(cameraTexture)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                camera?.release()
+                return false
+            }
+            camera?.startPreview()
+        }
+        return true
+    }
+
+    @Synchronized
     fun stopRecording() {
-
+        if (isRecording) {
+            openGLHandler.sendMessage(openGLHandler.obtainMessage(STOP_RECORD))
+            if (!isPreviewing) {
+                camera?.stopPreview()
+            }
+            isRecording = false
+        }
     }
 
+    @Synchronized
     fun destroy() {
-
+        camera?.release()
+        camera = null
     }
 
     companion object {
@@ -109,6 +151,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         const val STOP_PREVIEW = 2
         const val ON_FRAME = 3
         const val ON_DRAW = 4
+        const val START_RECORD = 5
+        const val STOP_RECORD = 6
 
     }
 
@@ -122,6 +166,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
          */
         private var skipFrameTimeMillis = 0L
 
+        private var recordSkipFrameTimeMillis = 0L
+
         /**
          * 这里直接创建的离屏的 egl 环境，是因为马上需要构造一个 SurfaceTexture
          * 用来获取相机的预览数据 [getCameraTexture]
@@ -129,6 +175,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         private var offScreenGL: OffScreenGL? = null
 
         private var previewGL: PreviewGL? = null
+
+        private var codecGL: MediaCodecGL? = null
 
         @Volatile
         private var hasFrame = false
@@ -174,10 +222,27 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     Log.d(TAG, "STOP_PREVIEW skipFrameTimeMillis=$skipFrameTimeMillis")
                     previewGL?.destroy()
                     previewGL = null
-                    removeCallbacksAndMessages(null)
-                    synchronized(frameCountLock) {
-                        frameCount = 0
+
+                    checkStopLoop()
+                }
+                START_RECORD -> {
+                    recordSkipFrameTimeMillis = 0
+                    Log.d(TAG, "START_RECORD")
+                    if (codecGL == null) {
+                        codecGL = MediaCodecGL(
+                            offScreenGL?.getSharedContext(),
+                            config,
+                            offScreenGL?.getOutputTextureId() ?: 0
+                        )
                     }
+
+                }
+                STOP_RECORD -> {
+                    Log.d(TAG, "STOP_RECORD recordSkipFrameTimeMillis=$recordSkipFrameTimeMillis")
+                    codecGL?.destroy()
+                    codecGL = null
+
+                    checkStopLoop()
                 }
                 ON_FRAME -> {
                     Log.d(TAG, "ON_FRAME")
@@ -193,7 +258,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
                 }
                 ON_DRAW -> {
-                    if (!isPreviewing) {
+                    if (!(isPreviewing || isRecording)) {
                         return
                     }
                     if (!hasFrame) {
@@ -213,6 +278,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     val spendTimeMillisInDraw = measureTimeMillis {
                         offScreenGL?.draw()
                         previewGL?.draw()
+                        codecGL?.draw()
                     }
 
                     val delayTimeMillis =
@@ -221,6 +287,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
                     if (delayTimeMillis <= 0) {
                         skipFrameTimeMillis -= delayTimeMillis
+                        recordSkipFrameTimeMillis -= delayTimeMillis
                         sendMessage(obtainMessage(ON_DRAW, System.currentTimeMillis()))
                     } else {
                         sendMessageDelayed(
@@ -237,6 +304,17 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                 else -> {
                 }
             }
+        }
+
+        private fun checkStopLoop() {
+            if (isRecording || isPreviewing) {
+                return
+            }
+            removeCallbacksAndMessages(null)
+            synchronized(frameCountLock) {
+                frameCount = 0
+            }
+
         }
 
     }

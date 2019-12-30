@@ -1,9 +1,6 @@
 package com.dthfish.fishrecorder.audio.bean
 
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.MediaCodecInfo
-import android.media.MediaRecorder
+import android.media.*
 
 /**
  * Description 录音需要的各种参数
@@ -122,6 +119,30 @@ class AudioConfig {
         } else {
             8
         }
+    }
+
+    fun createMediaCodec(): MediaCodec? {
+        val format = MediaFormat()
+        format.setString(MediaFormat.KEY_MIME, getMime())//aac
+        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, getChannelCount())//声道数
+        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, getSampleRate())//采样率
+        format.setInteger(MediaFormat.KEY_BIT_RATE, getBitRate())//比特率
+        format.setInteger(MediaFormat.KEY_AAC_PROFILE, getCodecProfile())//aac
+        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, getMinBufferSize())
+        var mediaCodec: MediaCodec? = null
+
+        try {
+            mediaCodec = MediaCodec.createEncoderByType(getMime())
+            mediaCodec.configure(
+                format,
+                null,
+                null,
+                MediaCodec.CONFIGURE_FLAG_ENCODE
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return mediaCodec
     }
 
 }

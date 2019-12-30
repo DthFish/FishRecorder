@@ -1,13 +1,12 @@
 package com.dthfish.fishrecorder.audio.consumer
 
 import android.media.MediaCodec
-import android.media.MediaFormat
 import android.util.Log
-import com.dthfish.fishrecorder.audio.packer.AudioPackThread
 import com.dthfish.fishrecorder.audio.IAudioConsumer
 import com.dthfish.fishrecorder.audio.IAudioPacker
 import com.dthfish.fishrecorder.audio.bean.AudioBuffer
 import com.dthfish.fishrecorder.audio.bean.AudioConfig
+import com.dthfish.fishrecorder.audio.packer.AudioPackThread
 import com.dthfish.fishrecorder.utils.TAG
 
 /**
@@ -30,16 +29,7 @@ class AudioEncoder(config: AudioConfig, private val packer: IAudioPacker) :
 
     init {
         val size = config.getMinBufferSize()
-
-        val format = MediaFormat()
-        format.setString(MediaFormat.KEY_MIME, config.getMime())//aac
-        format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, config.getChannelCount())//声道数
-        format.setInteger(MediaFormat.KEY_SAMPLE_RATE, config.getSampleRate())//采样率
-        format.setInteger(MediaFormat.KEY_BIT_RATE, config.getBitRate())//比特率
-        format.setInteger(MediaFormat.KEY_AAC_PROFILE, config.getCodecProfile())//aac
-        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, size)
-        mediaCodec = MediaCodec.createEncoderByType(config.getMime())
-        mediaCodec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        mediaCodec = config.createMediaCodec()!!
 
         originBuffers = Array(5) {
             AudioBuffer(config.getFormat(), size)
