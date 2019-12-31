@@ -34,6 +34,12 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
     private var drawInterval: Int
 
+    private var packerFactory: IVideoPackerFactory? = null
+
+    fun setPackerFactory(factory: IVideoPackerFactory) {
+        packerFactory = factory
+    }
+
     init {
         //初始化一些 camera 的信息
         try {
@@ -178,6 +184,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
         private var codecGL: MediaCodecGL? = null
 
+        private var videoEncoder: VideoEncoder? = null
+
         @Volatile
         private var hasFrame = false
 
@@ -207,8 +215,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                 }
                 START_PREVIEW -> {
                     Log.d(TAG, "START_PREVIEW")
-                    skipFrameTimeMillis = 0
                     if (previewGL == null) {
+                        skipFrameTimeMillis = 0
                         previewGL = PreviewGL(
                             offScreenGL?.getSharedContext(),
                             config,
@@ -226,14 +234,21 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     checkStopLoop()
                 }
                 START_RECORD -> {
-                    recordSkipFrameTimeMillis = 0
                     Log.d(TAG, "START_RECORD")
                     if (codecGL == null) {
+                        recordSkipFrameTimeMillis = 0
+                        val mediaCodec = config.createMediaCodec()!!
+                        val packer = packerFactory?.createPacker(config)!!
+                        videoEncoder = VideoEncoder(mediaCodec, packer)
+
                         codecGL = MediaCodecGL(
                             offScreenGL?.getSharedContext(),
                             config,
+                            mediaCodec.createInputSurface(),
                             offScreenGL?.getOutputTextureId() ?: 0
                         )
+
+                        videoEncoder?.start()
                     }
 
                 }
@@ -241,6 +256,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     Log.d(TAG, "STOP_RECORD recordSkipFrameTimeMillis=$recordSkipFrameTimeMillis")
                     codecGL?.destroy()
                     codecGL = null
+                    videoEncoder?.stop()
+                    videoEncoder = null
 
                     checkStopLoop()
                 }
@@ -277,8 +294,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
                     val spendTimeMillisInDraw = measureTimeMillis {
                         offScreenGL?.draw()
-                        previewGL?.draw()
                         codecGL?.draw()
+                        previewGL?.draw()
                     }
 
                     val delayTimeMillis =

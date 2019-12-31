@@ -5,6 +5,7 @@ import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
 import com.dthfish.fishrecorder.audio.IAudioPacker
+import com.dthfish.fishrecorder.video.IVideoPacker
 import com.dthfish.fishrecorder.utils.TAG
 import java.nio.ByteBuffer
 
@@ -13,7 +14,8 @@ import java.nio.ByteBuffer
  * Author DthFish
  * Date  2019-12-05.
  */
-class MediaMuxerPacker(path: String, private var trackCount: Int) : IAudioPacker {
+class MediaMuxerPacker(path: String, private var trackCount: Int) :
+    IAudioPacker, IVideoPacker {
 
 
     private val mediaMuxer: MediaMuxer =

@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">FishRecorder</string>
     <string name="str_to_gl">GL</string>
+    <string name="str_record">录像</string>
+    <string name="str_record_stop">停止</string>
+    <string name="str_preview">预览</string>
+    <string name="str_preview_stop">不预览</string>
 </resources>

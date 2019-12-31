@@ -3,6 +3,7 @@ package com.dthfish.fishrecorder.video
 import android.opengl.EGLContext
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
+import android.view.Surface
 import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
@@ -15,6 +16,7 @@ import com.dthfish.fishrecorder.utils.toFloatBuffer
 class MediaCodecGL(
     sharedContext: EGLContext?,
     videoConfig: VideoConfig,
+    private var surface: Surface,
     private var inputTextureId: Int
 ) {
     companion object {
@@ -68,18 +70,25 @@ class MediaCodecGL(
     private var textureCoordLoc = 0
     private var textureLoc = 0
 
+    private var startPresentationTime = -1L
+
     init {
 
-        val mediaCodec = videoConfig.createMediaCodec()!!
-        eglHelper.createMediaCodecSurface(mediaCodec.createInputSurface())
+        eglHelper.createMediaCodecSurface(surface)
         onCreate()
     }
 
     fun draw() {
         eglHelper.makeCurrent()
+        // System.currentTimeMillis() 获得是微秒，setPresentationTime 需要的是纳秒
+        val presentationTime = if (startPresentationTime == -1L) {
+            startPresentationTime = System.currentTimeMillis()
+            0L
+        } else {
+            (System.currentTimeMillis() - startPresentationTime) * 1000_000
+        }
         onDraw()
-        //TODO
-        eglHelper.setPresentationTime(0)
+        eglHelper.setPresentationTime(presentationTime)
         eglHelper.swapBuffers()
     }
 
@@ -90,7 +99,7 @@ class MediaCodecGL(
     }
 
     private fun onCreate() {
-        GLES20.glEnable(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
+//        GLES20.glEnable(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
         program = GLUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER)
         GLES20.glUseProgram(program)
         positionLoc = GLES20.glGetAttribLocation(program, "aPosition")

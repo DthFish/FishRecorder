@@ -32,7 +32,7 @@ class AudioEncoder(config: AudioConfig, private val packer: IAudioPacker) :
         mediaCodec = config.createMediaCodec()!!
 
         originBuffers = Array(5) {
-            AudioBuffer(config.getFormat(), size)
+            AudioBuffer(size)
         }
 
         sampleByteSizeInSec = config.getSampleByteSizeInSec()

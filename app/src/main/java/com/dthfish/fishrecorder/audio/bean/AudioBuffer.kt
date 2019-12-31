@@ -5,7 +5,7 @@ package com.dthfish.fishrecorder.audio.bean
  * Author DthFish
  * Date  2019-12-04.
  */
-class AudioBuffer(val audioFormat: Int, size: Int) {
+class AudioBuffer(size: Int) {
     var isReadyToFill: Boolean = true
         set(value) {
             if (value) {

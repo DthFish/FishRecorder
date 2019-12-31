@@ -50,7 +50,7 @@ class VideoConfig private constructor() {
 
     private var mime = "video/avc"
 
-    private var defaultCamera = Camera.CameraInfo.CAMERA_FACING_FRONT
+    private var defaultCamera = Camera.CameraInfo.CAMERA_FACING_BACK
 
     /**
      * 预留给录屏使用
