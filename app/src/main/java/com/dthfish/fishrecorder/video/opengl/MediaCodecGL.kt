@@ -1,12 +1,12 @@
-package com.dthfish.fishrecorder.video
+package com.dthfish.fishrecorder.video.opengl
 
 import android.opengl.EGLContext
-import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.view.Surface
 import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
+import com.dthfish.fishrecorder.video.bean.VideoConfig
 
 /**
  * Description
@@ -100,7 +100,10 @@ class MediaCodecGL(
 
     private fun onCreate() {
 //        GLES20.glEnable(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
-        program = GLUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        program = GLUtil.createProgram(
+            VERTEX_SHADER,
+            FRAGMENT_SHADER
+        )
         GLES20.glUseProgram(program)
         positionLoc = GLES20.glGetAttribLocation(program, "aPosition")
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")

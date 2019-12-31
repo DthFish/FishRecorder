@@ -1,5 +1,7 @@
 package com.dthfish.fishrecorder.video
 
+import com.dthfish.fishrecorder.video.bean.VideoConfig
+
 /**
  * Description
  * Author DthFish

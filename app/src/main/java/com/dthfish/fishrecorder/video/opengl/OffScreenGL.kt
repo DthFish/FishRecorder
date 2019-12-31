@@ -1,4 +1,4 @@
-package com.dthfish.fishrecorder.video
+package com.dthfish.fishrecorder.video.opengl
 
 import android.graphics.SurfaceTexture
 import android.opengl.EGLContext
@@ -9,6 +9,7 @@ import com.dthfish.fishrecorder.utils.EGLHelper
 import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.MatrixUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
+import com.dthfish.fishrecorder.video.bean.VideoConfig
 
 /**
  * Description
@@ -135,7 +136,10 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
     }
 
     private fun onCreate() {
-        cameraProgram = GLUtil.createProgram(VERTEX_SHADER_CAMERA, FRAGMENT_SHADER_CAMERA)
+        cameraProgram = GLUtil.createProgram(
+            VERTEX_SHADER_CAMERA,
+            FRAGMENT_SHADER_CAMERA
+        )
         GLES20.glUseProgram(cameraProgram)
         getCameraTexture()
         cameraPositionLoc = GLES20.glGetAttribLocation(cameraProgram, "aPosition")
@@ -153,7 +157,10 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         frameBuffer = fb[0]
         frameBufferTexture = ft[0]
 
-        program = GLUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER)
+        program = GLUtil.createProgram(
+            VERTEX_SHADER,
+            FRAGMENT_SHADER
+        )
         GLES20.glUseProgram(program)
         positionLoc = GLES20.glGetAttribLocation(program, "aPosition")
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")

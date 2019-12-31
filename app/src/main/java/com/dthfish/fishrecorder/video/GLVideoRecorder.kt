@@ -9,6 +9,10 @@ import android.os.Message
 import android.util.Log
 import com.dthfish.fishrecorder.utils.Camera1Util
 import com.dthfish.fishrecorder.utils.TAG
+import com.dthfish.fishrecorder.video.bean.VideoConfig
+import com.dthfish.fishrecorder.video.opengl.MediaCodecGL
+import com.dthfish.fishrecorder.video.opengl.OffScreenGL
+import com.dthfish.fishrecorder.video.opengl.PreviewGL
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
@@ -149,6 +153,15 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
     fun destroy() {
         camera?.release()
         camera = null
+
+        openGLHandler.sendEmptyMessage(ON_DESTROY)
+        openGLThread.quitSafely()
+        try {
+            openGLThread.join()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
+        }
+
     }
 
     companion object {
@@ -159,6 +172,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         const val ON_DRAW = 4
         const val START_RECORD = 5
         const val STOP_RECORD = 6
+        const val ON_DESTROY = 7
 
     }
 
@@ -209,6 +223,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
             when (msg.what) {
                 ON_CREATE -> {
+                    Log.d(TAG, "ON_CREATE")
                     if (offScreenGL == null) {
                         offScreenGL = OffScreenGL(config)
                     }
@@ -262,7 +277,6 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     checkStopLoop()
                 }
                 ON_FRAME -> {
-                    Log.d(TAG, "ON_FRAME")
                     synchronized(frameCountLock) {
                         // 这里必须要有，不然会是黑屏
                         offScreenGL?.makeCurrent()
@@ -287,7 +301,6 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                         )
                         return
                     }
-                    Log.d(TAG, "ON_DRAW")
                     // 延迟消息的时间 = 每一帧的时间间隔 - 在 Handler 调度中消耗的时间 - 绘制消耗的时间
                     val sendTimeMillis = msg.obj as Long
                     val spendTimeMillisInLoop = System.currentTimeMillis() - sendTimeMillis
@@ -300,7 +313,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
                     val delayTimeMillis =
                         drawInterval - spendTimeMillisInDraw - spendTimeMillisInLoop
-                    Log.d(TAG, "ON_DRAW delayTimeMillis=$delayTimeMillis")
+//                    Log.d(TAG, "ON_DRAW delayTimeMillis=$delayTimeMillis")
 
                     if (delayTimeMillis <= 0) {
                         skipFrameTimeMillis -= delayTimeMillis
@@ -317,6 +330,11 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
                 }
 
+                ON_DESTROY -> {
+                    Log.d(TAG, "ON_DESTROY")
+                    offScreenGL?.destroy()
+                    offScreenGL = null
+                }
 
                 else -> {
                 }

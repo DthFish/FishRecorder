@@ -3,6 +3,7 @@ package com.dthfish.fishrecorder.video
 import android.media.MediaCodec
 import android.util.Log
 import com.dthfish.fishrecorder.utils.TAG
+import com.dthfish.fishrecorder.video.packer.VideoPackThread
 
 /**
  * Description

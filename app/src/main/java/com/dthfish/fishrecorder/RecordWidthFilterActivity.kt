@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.TextureView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.dthfish.fishrecorder.audio.AudioRecorder
 import com.dthfish.fishrecorder.audio.IAudioConsumer
@@ -16,7 +17,7 @@ import com.dthfish.fishrecorder.utils.TAG
 import com.dthfish.fishrecorder.video.GLVideoRecorder
 import com.dthfish.fishrecorder.video.IVideoPacker
 import com.dthfish.fishrecorder.video.IVideoPackerFactory
-import com.dthfish.fishrecorder.video.VideoConfig
+import com.dthfish.fishrecorder.video.bean.VideoConfig
 import kotlinx.android.synthetic.main.activity_record_with_filter.*
 
 /**
@@ -133,6 +134,15 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onDestroy() {
         videoRecorder?.destroy()
         super.onDestroy()
+    }
+
+    override fun finish() {
+        if (isStart) {
+            Toast.makeText(this, getString(R.string.str_stop_before_finish), Toast.LENGTH_SHORT)
+                .show()
+            return
+        }
+        super.finish()
     }
 
     class PreviewHolder {

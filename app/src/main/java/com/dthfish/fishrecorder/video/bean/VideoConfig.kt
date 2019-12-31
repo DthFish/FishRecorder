@@ -1,4 +1,4 @@
-package com.dthfish.fishrecorder.video
+package com.dthfish.fishrecorder.video.bean
 
 import android.graphics.ImageFormat
 import android.hardware.Camera

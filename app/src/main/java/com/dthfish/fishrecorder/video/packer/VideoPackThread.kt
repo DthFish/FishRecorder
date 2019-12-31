@@ -1,8 +1,9 @@
-package com.dthfish.fishrecorder.video
+package com.dthfish.fishrecorder.video.packer
 
 import android.media.MediaCodec
 import android.util.Log
 import com.dthfish.fishrecorder.utils.TAG
+import com.dthfish.fishrecorder.video.IVideoPacker
 import java.lang.ref.WeakReference
 
 /**

@@ -3,7 +3,7 @@ package com.dthfish.fishrecorder.utils
 import android.graphics.ImageFormat
 import android.hardware.Camera
 import android.util.Log
-import com.dthfish.fishrecorder.video.VideoConfig
+import com.dthfish.fishrecorder.video.bean.VideoConfig
 import kotlin.math.abs
 
 /**
