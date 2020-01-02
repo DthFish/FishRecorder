@@ -65,6 +65,36 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         drawInterval = 1000 / config.getFps()
     }
 
+    @Synchronized
+    fun swapCamera() {
+        config.swapCamera()
+        camera?.stopPreview()
+        camera?.release()
+        camera = null
+        try {
+            camera = Camera.open(config.getDefaultCamera())
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        camera?.apply {
+            Camera1Util.selectPreviewParams(this, config)
+            Camera1Util.applyPreviewParams(this, config)
+        }
+
+        openGLHandler.sendMessage(openGLHandler.obtainMessage(SWAP_CAMERA))
+        try {
+            val cameraTexture = openGLHandler.getCameraTexture()
+            camera?.setPreviewTexture(cameraTexture)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            camera?.release()
+            camera = null
+        }
+        camera?.startPreview()
+
+
+    }
 
     @Synchronized
     fun startPreview(surface: SurfaceTexture, width: Int, height: Int) {
@@ -173,6 +203,7 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         const val START_RECORD = 5
         const val STOP_RECORD = 6
         const val ON_DESTROY = 7
+        const val SWAP_CAMERA = 8
 
     }
 
@@ -334,6 +365,10 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                     Log.d(TAG, "ON_DESTROY")
                     offScreenGL?.destroy()
                     offScreenGL = null
+                }
+                SWAP_CAMERA -> {
+                    Log.d(TAG, "SWAP_CAMERA")
+                    offScreenGL?.swapCamera()
                 }
 
                 else -> {

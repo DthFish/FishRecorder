@@ -15,6 +15,13 @@
         android:text="@string/str_record" />
 
     <Button
+        android:id="@+id/btnSwap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="@string/str_swap_camera" />
+
+    <Button
         android:id="@+id/btnPreview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

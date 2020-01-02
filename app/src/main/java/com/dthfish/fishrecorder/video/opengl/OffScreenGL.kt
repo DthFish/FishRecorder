@@ -82,7 +82,7 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
     private val vertexPointBuffer = pos.toFloatBuffer()
     private val coordPointBuffer = coord.toFloatBuffer()
 
-    private val cameraMatrix = MatrixUtil.getOriginalMatrix()
+    private var cameraMatrix = MatrixUtil.getOriginalMatrix()
 
     private val cameraTextureMatrix = MatrixUtil.getOriginalMatrix()
 
@@ -121,6 +121,49 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         rotateAngle = videoConfig.getDisplayDegree().toFloat()
         eglHelper.createOffScreenSurface(videoWidth, videoHeight)
         onCreate()
+
+        MatrixUtil.getMatrix(
+            cameraMatrix,
+            MatrixUtil.TYPE_CENTERCROP,
+            this.previewWidth,
+            this.previewHeight,
+            this.videoWidth,
+            this.videoHeight
+        )
+        Log.d(
+            "Camera1",
+            "previewWidthForGL=${this.previewWidth},previewHeightForGL=${this.previewHeight}"
+        )
+        Log.d("Camera1", "videoWidth=${this.videoWidth},videoHeight=${this.videoHeight}")
+
+        MatrixUtil.rotate(cameraMatrix, rotateAngle)
+        MatrixUtil.flip(cameraMatrix, x = false, y = true)
+    }
+
+    fun swapCamera() {
+        // 看上去很多，其实仅仅是改变了一下矩阵
+        previewWidth = videoConfig.getPreviewWidthForGL()
+        previewHeight = videoConfig.getPreviewHeightForGL()
+        rotateAngle = videoConfig.getDisplayDegree().toFloat()
+
+        val newCameraMatrix = MatrixUtil.getOriginalMatrix()
+        MatrixUtil.getMatrix(
+            newCameraMatrix,
+            MatrixUtil.TYPE_CENTERCROP,
+            this.previewWidth,
+            this.previewHeight,
+            this.videoWidth,
+            this.videoHeight
+        )
+        Log.d(
+            "Camera1",
+            "previewWidthForGL=${this.previewWidth},previewHeightForGL=${this.previewHeight}"
+        )
+        Log.d("Camera1", "videoWidth=${this.videoWidth},videoHeight=${this.videoHeight}")
+
+        MatrixUtil.rotate(newCameraMatrix, rotateAngle)
+        MatrixUtil.flip(newCameraMatrix, x = false, y = true)
+        cameraMatrix = newCameraMatrix
     }
 
     fun draw() {
@@ -166,37 +209,6 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
         GLUtil.checkEglError("onCreate")
-
-
-        MatrixUtil.getMatrix(
-            cameraMatrix,
-            MatrixUtil.TYPE_CENTERCROP,
-            this.previewWidth,
-            this.previewHeight,
-            this.videoWidth,
-            this.videoHeight
-        )
-        Log.d(
-            "Camera1",
-            "previewWidthForGL=${this.previewWidth},previewHeightForGL=${this.previewHeight}"
-        )
-        Log.d("Camera1", "videoWidth=${this.videoWidth},videoHeight=${this.videoHeight}")
-
-        MatrixUtil.rotate(cameraMatrix, rotateAngle)
-        MatrixUtil.flip(cameraMatrix, x = false, y = true)
-
-        /*MatrixUtil.getMatrix(
-            cameraMatrix,
-            MatrixUtil.TYPE_CENTERCROP,
-            this.previewHeight,
-            this.previewWidth,
-            this.videoWidth,
-            this.videoHeight
-        )
-
-        MatrixUtil.rotate(cameraMatrix, 90f)
-        MatrixUtil.flip(cameraMatrix, x = true, y = false)*/
-
     }
 
     private fun onDraw() {

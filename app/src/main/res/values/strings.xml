@@ -6,4 +6,5 @@
     <string name="str_preview">预览</string>
     <string name="str_preview_stop">不预览</string>
     <string name="str_stop_before_finish">正在录制，请先停止！</string>
+    <string name="str_swap_camera">翻转</string>
 </resources>

@@ -85,6 +85,10 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
                 btnPreview.text = getString(R.string.str_preview)
             }
         }
+
+        btnSwap.setOnClickListener {
+            videoRecorder?.swapCamera()
+        }
     }
 
     private var mediaMuxerPacker: MediaMuxerPacker? = null

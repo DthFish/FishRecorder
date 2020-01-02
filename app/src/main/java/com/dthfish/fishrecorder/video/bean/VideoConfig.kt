@@ -283,4 +283,12 @@ class VideoConfig private constructor() {
         return mediaCodec
     }
 
+    fun swapCamera() {
+        defaultCamera = if (Camera.CameraInfo.CAMERA_FACING_BACK == defaultCamera) {
+            Camera.CameraInfo.CAMERA_FACING_FRONT
+        } else {
+            Camera.CameraInfo.CAMERA_FACING_BACK
+        }
+    }
+
 }
