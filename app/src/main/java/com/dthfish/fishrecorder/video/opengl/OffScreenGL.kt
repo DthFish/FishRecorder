@@ -10,6 +10,7 @@ import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.MatrixUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
 import com.dthfish.fishrecorder.video.bean.VideoConfig
+import com.dthfish.fishrecorder.video.opengl.filter.GroupFilter
 
 /**
  * Description
@@ -113,6 +114,8 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
     private var previewHeight = 0
     private var rotateAngle = 0f
 
+    private var groupFilter: GroupFilter
+
     init {
         videoWidth = videoConfig.getWidth()
         videoHeight = videoConfig.getHeight()
@@ -120,8 +123,13 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         previewHeight = videoConfig.getPreviewHeightForGL()
         rotateAngle = videoConfig.getDisplayDegree().toFloat()
         eglHelper.createOffScreenSurface(videoWidth, videoHeight)
+        groupFilter = GroupFilter(videoWidth, videoHeight)
+        // 测试代码
+        /*val loadBitmap = TestUtil.loadBitmap()!!
+        val filter = WatermarkFilter(videoWidth - 40 - 100, 40, 100, 75, loadBitmap!!)
+        groupFilter.addFilter(filter)
+        groupFilter.addFilter(GaryFilter())*/
         onCreate()
-
         MatrixUtil.getMatrix(
             cameraMatrix,
             MatrixUtil.TYPE_CENTERCROP,
@@ -209,11 +217,17 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
         GLUtil.checkEglError("onCreate")
+
+        groupFilter.create()
+        //注意这里先传递给 groupFilter 如果 groupFilter 没有添加其他的 Filter 则会直接返回出来
+        groupFilter.setInputTextureId(cameraFrameBufferTexture)
     }
 
     private fun onDraw() {
         onDrawCameraFrameBuffer(inputTextureId)
-        onDrawFrameBuffer(cameraFrameBufferTexture)
+        groupFilter.draw()
+//        onDrawFrameBuffer(cameraFrameBufferTexture)
+        onDrawFrameBuffer(groupFilter.getOutputTextureId())
     }
 
     private fun onDrawCameraFrameBuffer(inputTexture: Int) {
@@ -321,6 +335,7 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
         GLES20.glDeleteProgram(program)
         GLES20.glDeleteFramebuffers(1, intArrayOf(frameBuffer), 0)
         GLES20.glDeleteTextures(1, intArrayOf(frameBufferTexture), 0)
+        groupFilter.destroy()
     }
 
     @Synchronized

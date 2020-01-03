@@ -1,10 +1,12 @@
 package com.dthfish.fishrecorder.utils
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.os.Environment
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.dthfish.fishrecorder.R
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -90,5 +92,12 @@ object TestUtil {
             Toast.makeText(activity, "保存成功->$jpegName", Toast.LENGTH_SHORT).show()
         }
 
+    }
+
+    fun loadBitmap(): Bitmap? {
+        if (activity == null) {
+            return null
+        }
+        return BitmapFactory.decodeResource(activity!!.resources, R.drawable.icon_spider, null)
     }
 }

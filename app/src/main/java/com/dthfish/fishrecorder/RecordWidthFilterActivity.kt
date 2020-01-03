@@ -14,6 +14,7 @@ import com.dthfish.fishrecorder.audio.bean.AudioConfig
 import com.dthfish.fishrecorder.audio.consumer.AudioEncoder
 import com.dthfish.fishrecorder.muxer.MediaMuxerPacker
 import com.dthfish.fishrecorder.utils.TAG
+import com.dthfish.fishrecorder.utils.TestUtil
 import com.dthfish.fishrecorder.video.GLVideoRecorder
 import com.dthfish.fishrecorder.video.IVideoPacker
 import com.dthfish.fishrecorder.video.IVideoPackerFactory
@@ -35,6 +36,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_with_filter)
+        TestUtil.reset(this)
 
         val config = VideoConfig.obtainGL()
         val rotation = windowManager.defaultDisplay.rotation
@@ -138,6 +140,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onDestroy() {
         videoRecorder?.destroy()
         super.onDestroy()
+        TestUtil.clear()
     }
 
     override fun finish() {
