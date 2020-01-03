@@ -19,6 +19,7 @@ import com.dthfish.fishrecorder.video.GLVideoRecorder
 import com.dthfish.fishrecorder.video.IVideoPacker
 import com.dthfish.fishrecorder.video.IVideoPackerFactory
 import com.dthfish.fishrecorder.video.bean.VideoConfig
+import com.dthfish.fishrecorder.video.opengl.filter.WatermarkFilter
 import kotlinx.android.synthetic.main.activity_record_with_filter.*
 
 /**
@@ -48,6 +49,18 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
                 return createMediaMuxerPacker()
             }
         })
+
+        var loadBitmap = TestUtil.loadBitmap()!!
+        var filter = WatermarkFilter(
+            config.getWidth() - 40 - 100,
+            40,
+            100,
+            75,
+            loadBitmap
+        )
+        videoRecorder?.addFilter(filter)
+
+//        videoRecorder?.addFilter(GaryFilter())
 
         textureView.keepScreenOn = true
         textureView.surfaceTextureListener = this

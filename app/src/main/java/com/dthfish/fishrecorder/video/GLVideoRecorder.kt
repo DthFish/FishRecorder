@@ -13,6 +13,7 @@ import com.dthfish.fishrecorder.video.bean.VideoConfig
 import com.dthfish.fishrecorder.video.opengl.MediaCodecGL
 import com.dthfish.fishrecorder.video.opengl.OffScreenGL
 import com.dthfish.fishrecorder.video.opengl.PreviewGL
+import com.dthfish.fishrecorder.video.opengl.filter.AFilter
 import java.io.IOException
 import kotlin.system.measureTimeMillis
 
@@ -194,6 +195,14 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
 
     }
 
+    fun addFilter(filter: AFilter) {
+        openGLHandler.sendMessage(openGLHandler.obtainMessage(ADD_FILTER, filter))
+    }
+
+    fun removeFilter(filter: AFilter) {
+        openGLHandler.sendMessage(openGLHandler.obtainMessage(REMOVE_FILTER, filter))
+    }
+
     companion object {
         const val ON_CREATE = 0
         const val START_PREVIEW = 1
@@ -204,6 +213,8 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
         const val STOP_RECORD = 6
         const val ON_DESTROY = 7
         const val SWAP_CAMERA = 8
+        const val ADD_FILTER = 9
+        const val REMOVE_FILTER = 10
 
     }
 
@@ -369,6 +380,17 @@ class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) 
                 SWAP_CAMERA -> {
                     Log.d(TAG, "SWAP_CAMERA")
                     offScreenGL?.swapCamera()
+                }
+
+                ADD_FILTER -> {
+                    Log.d(TAG, "ADD_FILTER")
+                    offScreenGL?.addFilter(msg.obj as AFilter)
+                }
+
+                REMOVE_FILTER -> {
+                    Log.d(TAG, "REMOVE_FILTER")
+                    offScreenGL?.removeFilter(msg.obj as AFilter)
+
                 }
 
                 else -> {

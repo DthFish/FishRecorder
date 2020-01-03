@@ -10,6 +10,7 @@ import com.dthfish.fishrecorder.utils.GLUtil
 import com.dthfish.fishrecorder.utils.MatrixUtil
 import com.dthfish.fishrecorder.utils.toFloatBuffer
 import com.dthfish.fishrecorder.video.bean.VideoConfig
+import com.dthfish.fishrecorder.video.opengl.filter.AFilter
 import com.dthfish.fishrecorder.video.opengl.filter.GroupFilter
 
 /**
@@ -365,5 +366,15 @@ class OffScreenGL(private val videoConfig: VideoConfig) {
 
     fun getOutputTextureId(): Int {
         return frameBufferTexture
+    }
+
+    fun addFilter(filter: AFilter) {
+        eglHelper.makeCurrent()
+        groupFilter.addFilter(filter)
+    }
+
+    fun removeFilter(filter: AFilter) {
+        eglHelper.makeCurrent()
+        groupFilter.removeFilter(filter)
     }
 }

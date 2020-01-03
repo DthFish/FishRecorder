@@ -71,9 +71,6 @@ open class AFilter {
         matrixLoc = GLES20.glGetUniformLocation(program, "uMatrix")
         textureCoordLoc = GLES20.glGetAttribLocation(program, "aTextureCoord")
         textureLoc = GLES20.glGetUniformLocation(program, "uTexture")
-
-        MatrixUtil.flip(matrix, x = false, y = true)
-
     }
 
     open fun draw() {

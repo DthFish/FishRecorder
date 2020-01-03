@@ -19,10 +19,16 @@ class WatermarkFilter(
 
     private var watermarkTextureId = 0
     private var watermark = object : AFilter() {
+
         override fun viewportAndClearColor() {
             // 空实现为了实现两张纹理混合的效果，所以不需要 clear
             // 而且视图的位置大小需要重写
-            GLES20.glViewport(locationX, locationY, markWidth, markHeight)
+            GLES20.glViewport(
+                locationX,
+                this@WatermarkFilter.height - markHeight - locationY,
+                markWidth,
+                markHeight
+            )
 
         }
     }
@@ -43,7 +49,6 @@ class WatermarkFilter(
         GLES20.glBlendFunc(GLES20.GL_SRC_COLOR, GLES20.GL_DST_ALPHA)
         watermark.draw()
         GLES20.glDisable(GLES20.GL_BLEND)
-        GLES20.glViewport(0, 0, width, height)//复原
     }
 
     override fun destroy() {
