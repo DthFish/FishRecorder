@@ -1,5 +1,6 @@
 package com.dthfish.fishrecorder.utils
 
+import android.content.res.Resources
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -29,3 +30,7 @@ fun ShortArray.toShortBuffer(): ShortBuffer {
     fb.position(0)
     return fb
 }
+
+fun Float.dp2px() = (this * Resources.getSystem().displayMetrics.density + 0.5).toInt()
+
+fun Int.px2dp() = (this / Resources.getSystem().displayMetrics.density + 0.5).toInt()

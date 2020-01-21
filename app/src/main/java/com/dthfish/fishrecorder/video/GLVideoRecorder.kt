@@ -22,7 +22,7 @@ import kotlin.system.measureTimeMillis
  * Author DthFish
  * Date  2019-12-10.
  */
-class GLVideoRecorder(private val config: VideoConfig = VideoConfig.obtainGL()) {
+class GLVideoRecorder(val config: VideoConfig = VideoConfig.obtainGL()) {
     private var camera: Camera? = null
 
     /**
