@@ -6,6 +6,7 @@ import android.graphics.SurfaceTexture
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.TextureView
 import android.view.View
@@ -30,6 +31,7 @@ import com.dthfish.fishrecorder.video.IVideoPackerFactory
 import com.dthfish.fishrecorder.video.bean.VideoConfig
 import com.dthfish.fishrecorder.video.opengl.filter.WatermarkFilter
 import kotlinx.android.synthetic.main.activity_record_with_filter.*
+import kotlin.math.abs
 
 
 /**
@@ -48,11 +50,14 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     private var currentWatermarkIndex = -1
 
     private var currentWatermark: WatermarkFilter? = null
+    private lateinit var gestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_with_filter)
 //        TestUtil.reset(this)
+
+        gestureDetector = GestureDetector(this, SwitchGestureListener())
 
         // Video Audio Recorder
         initRecorder()
@@ -251,18 +256,23 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
 
     }
 
+    // 1 为下一个，-1为前一个
+    private fun switchFilter(direction: Int) {
+
+
+    }
+
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
                 if (rvWatermark.visibility == View.VISIBLE && !isShowing && !isDismissing) {
                     dismissWatermarkSelector()
-                    return true
                 }
             }
             else -> {
             }
         }
-        return super.onTouchEvent(event)
+        return gestureDetector.onTouchEvent(event)
     }
 
     private fun initRecorder() {
@@ -363,5 +373,33 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         var surfaceTexture: SurfaceTexture? = null
         var width = 0
         var height = 0
+    }
+
+    inner class SwitchGestureListener : GestureDetector.SimpleOnGestureListener() {
+
+        private var totalX = 0f
+        private var preTime = 0L
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
+            totalX += distanceX
+            if (abs(totalX) > 400) {
+                // 切换滤镜效果，1 秒钟内只触发一次
+                if (System.currentTimeMillis() - preTime > 1000) {
+                    switchFilter(if (totalX > 0) 1 else -1)
+                    preTime = System.currentTimeMillis()
+                }
+
+            }
+            return super.onScroll(e1, e2, distanceX, distanceY)
+        }
+
+        override fun onDown(e: MotionEvent?): Boolean {
+            totalX = 0f
+            return super.onDown(e)
+        }
     }
 }
