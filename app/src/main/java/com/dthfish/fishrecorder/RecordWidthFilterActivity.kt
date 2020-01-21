@@ -5,6 +5,10 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.TextureView
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.OvershootInterpolator
+import android.view.animation.RotateAnimation
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.dthfish.fishrecorder.audio.AudioRecorder
@@ -31,6 +35,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     private var videoRecorder: GLVideoRecorder? = null
     private var isStart = false
     private var isPreview = true
+    private var audioRecorder: AudioRecorder? = null
     // 用来测试预览和录制已经分离
     private val previewHolder = PreviewHolder()
 
@@ -39,50 +44,23 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         setContentView(R.layout.activity_record_with_filter)
         TestUtil.reset(this)
 
-        val config = VideoConfig.obtainGL()
-        val rotation = windowManager.defaultDisplay.rotation
-        config.calculateScreenDegree(rotation)
-        videoRecorder = GLVideoRecorder(config)
+        // Video Audio Recorder
+        initRecorder()
+        initHandleView()
+    }
 
-        videoRecorder?.setPackerFactory(object : IVideoPackerFactory {
-            override fun createPacker(config: VideoConfig): IVideoPacker {
-                return createMediaMuxerPacker()
-            }
-        })
-
-        var loadBitmap = TestUtil.loadBitmap()!!
-        var filter = WatermarkFilter(
-            config.getWidth() - 40 - 100,
-            40,
-            100,
-            75,
-            loadBitmap
-        )
-        videoRecorder?.addFilter(filter)
-
-//        videoRecorder?.addFilter(GaryFilter())
-
-        textureView.keepScreenOn = true
-        textureView.surfaceTextureListener = this
-
-        val audioRecorder = AudioRecorder()
-        audioRecorder.setConsumerFactory(object : IAudioConsumerFactory {
-            override fun createConsumer(config: AudioConfig): IAudioConsumer {
-                return AudioEncoder(config, createMediaMuxerPacker())
-            }
-        })
-
+    private fun initHandleView() {
         btnRecord.setOnClickListener {
             isStart = !isStart
             if (isStart) {
                 videoRecorder?.startRecording()
-                audioRecorder.start()
-                btnRecord.text = getString(R.string.str_record_stop)
+                audioRecorder?.start()
+                tvRecord.text = getString(R.string.str_record_stop)
             } else {
                 videoRecorder?.stopRecording()
-                audioRecorder.stop()
+                audioRecorder?.stop()
                 destroyMediaMuxerPacker()
-                btnRecord.text = getString(R.string.str_record)
+                tvRecord.text = getString(R.string.str_record)
             }
         }
 
@@ -94,16 +72,64 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
                     previewHolder.width,
                     previewHolder.height
                 )
-                btnPreview.text = getString(R.string.str_preview_stop)
+                btnPreview.setImageResource(R.drawable.icon_preview_open)
             } else {
                 videoRecorder?.stopPreview()
-                btnPreview.text = getString(R.string.str_preview)
+                btnPreview.setImageResource(R.drawable.icon_preview_close)
             }
         }
 
-        btnSwap.setOnClickListener {
+        val function: (v: View) -> Unit = {
+            val animation = RotateAnimation(
+                0f,
+                360f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f
+            )
+            animation.duration = 500
+            animation.interpolator = OvershootInterpolator()
+
+            it.startAnimation(animation)
             videoRecorder?.swapCamera()
         }
+        btnSwap.setOnClickListener(function)
+    }
+
+    private fun initRecorder() {
+        val config = VideoConfig.obtainGL()
+        val rotation = windowManager.defaultDisplay.rotation
+        config.calculateScreenDegree(rotation)
+        videoRecorder = GLVideoRecorder(config)
+
+        videoRecorder?.setPackerFactory(object : IVideoPackerFactory {
+            override fun createPacker(config: VideoConfig): IVideoPacker {
+                return createMediaMuxerPacker()
+            }
+        })
+
+        val loadBitmap = TestUtil.loadBitmap()!!
+        val filter = WatermarkFilter(
+            config.getWidth() - 40 - 100,
+            40,
+            100,
+            75,
+            loadBitmap
+        )
+        videoRecorder?.addFilter(filter)
+
+        //        videoRecorder?.addFilter(GaryFilter())
+
+        textureView.keepScreenOn = true
+        textureView.surfaceTextureListener = this
+
+        audioRecorder = AudioRecorder()
+        audioRecorder?.setConsumerFactory(object : IAudioConsumerFactory {
+            override fun createConsumer(config: AudioConfig): IAudioConsumer {
+                return AudioEncoder(config, createMediaMuxerPacker())
+            }
+        })
     }
 
     private var mediaMuxerPacker: MediaMuxerPacker? = null
