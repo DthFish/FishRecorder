@@ -90,9 +90,9 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         }
 
         btnWatermark.setOnClickListener {
-            if (rvWatermark.visibility == View.GONE && !isShowing) {
+            if (rvWatermark.visibility == View.GONE && !isShowing && !isDismissing) {
                 showWatermarkSelector()
-            } else if (rvWatermark.visibility == View.VISIBLE && !isDismissing) {
+            } else if (rvWatermark.visibility == View.VISIBLE && !isShowing && !isDismissing) {
                 dismissWatermarkSelector()
             }
         }
@@ -254,7 +254,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
-                if (rvWatermark.visibility == View.VISIBLE && !isDismissing) {
+                if (rvWatermark.visibility == View.VISIBLE && !isShowing && !isDismissing) {
                     dismissWatermarkSelector()
                     return true
                 }
