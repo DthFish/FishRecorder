@@ -100,7 +100,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         }
 
         btnWatermark.setOnClickListener {
-            if (rvWatermark.visibility == View.GONE && !isShowing && !isDismissing) {
+            if (rvWatermark.visibility == View.INVISIBLE && !isShowing && !isDismissing) {
                 showWatermarkSelector()
             } else if (rvWatermark.visibility == View.VISIBLE && !isShowing && !isDismissing) {
                 dismissWatermarkSelector()
@@ -256,7 +256,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
 
             override fun onAnimationEnd(animation: Animation?) {
                 isDismissing = false
-                rvWatermark.visibility = View.GONE
+                rvWatermark.visibility = View.INVISIBLE
             }
 
             override fun onAnimationStart(animation: Animation?) {

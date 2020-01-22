@@ -58,7 +58,7 @@
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:visibility="gone"
+        android:visibility="invisible"
         android:id="@+id/rvWatermark"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
