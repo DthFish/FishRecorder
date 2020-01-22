@@ -49,7 +49,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     // 用来测试预览和录制已经分离
     private val previewHolder = PreviewHolder()
 
-    private var currentWatermarkIndex = -1
+    private var currentWatermarkIndex = 0
     private var currentWatermark: WatermarkFilter? = null
 
     private lateinit var gestureDetector: GestureDetector
@@ -127,6 +127,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         filterList.add(GaryFilter())
 
         val dataList = arrayListOf(
+            R.drawable.icon_watermark_unuse,
             R.drawable.icon_christmas_0,
             R.drawable.icon_christmas_1,
             R.drawable.icon_christmas_2,
@@ -173,17 +174,20 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
             }
         adapter.setOnItemClickListener { adt, view, position ->
             if (currentWatermarkIndex == position) return@setOnItemClickListener
-            changeWatermark(dataList[position])
+            changeWatermark(dataList[position], position)
             currentWatermarkIndex = position
 
         }
         rvWatermark.adapter = adapter
     }
 
-    private fun changeWatermark(resId: Int) {
+    private fun changeWatermark(resId: Int, position: Int) {
         currentWatermark?.let {
             videoRecorder?.removeFilter(it)
             currentWatermark = null
+        }
+        if (position == 0) {
+            return
         }
         val bitmap = BitmapFactory.decodeResource(resources, resId, null)
         val height = 75f
