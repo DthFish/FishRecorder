@@ -79,6 +79,7 @@ class GroupFilter(width: Int, height: Int) : AFilter() {
 
     fun removeFilter(filter: AFilter) {
         filters.remove(filter)
+        MatrixUtil.flip(filter.getMatrix(), x = false, y = true)
         filter.destroy()
     }
 

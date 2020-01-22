@@ -29,6 +29,8 @@ import com.dthfish.fishrecorder.video.GLVideoRecorder
 import com.dthfish.fishrecorder.video.IVideoPacker
 import com.dthfish.fishrecorder.video.IVideoPackerFactory
 import com.dthfish.fishrecorder.video.bean.VideoConfig
+import com.dthfish.fishrecorder.video.opengl.filter.AFilter
+import com.dthfish.fishrecorder.video.opengl.filter.GaryFilter
 import com.dthfish.fishrecorder.video.opengl.filter.WatermarkFilter
 import kotlinx.android.synthetic.main.activity_record_with_filter.*
 import kotlin.math.abs
@@ -48,9 +50,12 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     private val previewHolder = PreviewHolder()
 
     private var currentWatermarkIndex = -1
-
     private var currentWatermark: WatermarkFilter? = null
+
     private lateinit var gestureDetector: GestureDetector
+
+    private val filterList = ArrayList<AFilter?>()
+    private var currentFilterIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -117,6 +122,9 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
             videoRecorder?.swapCamera()
         }
         btnSwap.setOnClickListener(function)
+        // 第一个为空为了方便坐标计算
+        filterList.add(null)
+        filterList.add(GaryFilter())
 
         val dataList = arrayListOf(
             R.drawable.icon_christmas_0,
@@ -258,8 +266,16 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
 
     // 1 为下一个，-1为前一个
     private fun switchFilter(direction: Int) {
-
-
+        if (filterList.size <= 1) return
+        val preIndex = currentFilterIndex;
+        filterList[preIndex]?.let {
+            videoRecorder?.removeFilter(it)
+        }
+        currentFilterIndex += direction + filterList.size
+        currentFilterIndex %= filterList.size
+        filterList[currentFilterIndex]?.let {
+            videoRecorder?.addFilter(it)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
