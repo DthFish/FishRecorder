@@ -1,6 +1,5 @@
 package com.dthfish.fishrecorder
 
-import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.graphics.SurfaceTexture
 import android.os.Bundle
@@ -23,6 +22,7 @@ import com.dthfish.fishrecorder.audio.IAudioConsumerFactory
 import com.dthfish.fishrecorder.audio.bean.AudioConfig
 import com.dthfish.fishrecorder.audio.consumer.AudioEncoder
 import com.dthfish.fishrecorder.muxer.MediaMuxerPacker
+import com.dthfish.fishrecorder.utils.BitmapUtil
 import com.dthfish.fishrecorder.utils.TAG
 import com.dthfish.fishrecorder.utils.dp2px
 import com.dthfish.fishrecorder.video.GLVideoRecorder
@@ -189,7 +189,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         if (position == 0) {
             return
         }
-        val bitmap = BitmapFactory.decodeResource(resources, resId, null)
+        val bitmap = BitmapUtil.createBitmapForGL(this, resId)
         val height = 75f
         val width = height / bitmap.height * bitmap.width
 

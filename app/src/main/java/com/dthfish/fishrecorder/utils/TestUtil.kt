@@ -1,7 +1,6 @@
 package com.dthfish.fishrecorder.utils
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import android.os.Environment
 import android.widget.Toast
@@ -98,6 +97,6 @@ object TestUtil {
         if (activity == null) {
             return null
         }
-        return BitmapFactory.decodeResource(activity!!.resources, R.drawable.icon_spider, null)
+        return BitmapUtil.createBitmapForGL(activity!!, R.drawable.icon_spider)
     }
 }

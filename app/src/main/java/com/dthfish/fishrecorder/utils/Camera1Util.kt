@@ -100,6 +100,7 @@ object Camera1Util {
             previewFormats?.forEach { it ->
                 Log.d("Camera1", "format =$it")
             }
+            // 目前测试的手机获得的都是 jpeg，所以不会走到下面的逻辑，如果发生错误可能要调整
             previewFormats.firstOrNull {
                 it == ImageFormat.NV21 || it == ImageFormat.YV12
             }?.apply {
