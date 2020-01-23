@@ -126,8 +126,11 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         // 第一个为空为了方便坐标计算
         filterList.add(null)
         filterList.add(GaryFilter())
-        // lut_brightly 鲜艳
-        filterList.add(LutFilter(this, R.drawable.lut_brightly))
+        // lut_colour 鲜艳
+        filterList.add(LutFilter(this, R.drawable.lut_colour))
+        filterList.add(LutFilter(this, R.drawable.lut_depth))
+        filterList.add(LutFilter(this, R.drawable.lut_gary))
+        filterList.add(LutFilter(this, R.drawable.lut_purity))
 //        R.drawable.lut_origin 用来检查 LutFilter 片元着色器代码是否有误
 //        filterList.add(LutFilter(this, R.drawable.lut_origin))
 
@@ -276,12 +279,27 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     // 1 为下一个，-1为前一个
     private fun switchFilter(direction: Int) {
         if (filterList.size <= 1) return
-        val preIndex = currentFilterIndex;
+        val preIndex = currentFilterIndex
         filterList[preIndex]?.let {
             videoRecorder?.removeFilter(it)
         }
         currentFilterIndex += direction + filterList.size
         currentFilterIndex %= filterList.size
+        filterList[currentFilterIndex]?.let {
+            videoRecorder?.addFilter(it)
+        }
+    }
+
+    private fun switchFilterByPosition(position: Int) {
+        if (filterList.size <= 1) return
+        if (position < 0 || position > filterList.size - 1) return
+        if (currentFilterIndex == position) return
+
+        val preIndex = currentFilterIndex
+        filterList[preIndex]?.let {
+            videoRecorder?.removeFilter(it)
+        }
+        currentFilterIndex = position
         filterList[currentFilterIndex]?.let {
             videoRecorder?.addFilter(it)
         }
