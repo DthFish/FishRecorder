@@ -61,10 +61,7 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record_with_filter)
-//        TestUtil.reset(this)
-
         gestureDetector = GestureDetector(this, SwitchGestureListener())
-
         // Video Audio Recorder
         initRecorder()
         initHandleView()
@@ -330,18 +327,6 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
             }
         })
 
-        /*val loadBitmap = TestUtil.loadBitmap()!!
-        val filter = WatermarkFilter(
-            config.getWidth() - 40 - 100,
-            40,
-            100,
-            75,
-            loadBitmap
-        )
-        videoRecorder?.addFilter(filter)*/
-
-        //        videoRecorder?.addFilter(GaryFilter())
-
         textureView.keepScreenOn = true
         textureView.surfaceTextureListener = this
 
@@ -400,7 +385,6 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
     override fun onDestroy() {
         videoRecorder?.destroy()
         super.onDestroy()
-//        TestUtil.clear()
     }
 
     override fun finish() {

@@ -7,7 +7,7 @@ import androidx.annotation.DrawableRes
 
 /**
  * Description
- * Author zhaolizhi
+ * Author DthFish
  * Date  2020-01-22.
  */
 object BitmapUtil {

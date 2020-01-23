@@ -15,10 +15,12 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import com.dthfish.fishrecorder.R
 import java.util.*
+import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Description
- * Author zhaolizhi
+ * Author DthFish
  * Date  2019/4/10.
  */
 class RippleButton : FrameLayout, View.OnClickListener {
@@ -105,7 +107,7 @@ class RippleButton : FrameLayout, View.OnClickListener {
         imageView.post {
             centerX = w / 2
             centerY = h / 2
-            radius = Math.min(w, h) / 2
+            radius = min(w, h) / 2
             val imgRadius = imageView.width / 2
             val circleRadius = imgRadius * (1 - originProportion)
             imageProportion = circleRadius / radius
@@ -121,7 +123,7 @@ class RippleButton : FrameLayout, View.OnClickListener {
     }
 
     private fun drawRipple(ripple: FloatWrap, canvas: Canvas, paint: Paint) {
-        if (Math.abs(0 - ripple.fraction) > 0.01) {
+        if (abs(0 - ripple.fraction) > 0.01) {
             val strokeWidth = radius.toFloat() * spaceProportion * ripple.fraction
             val tempRadius = radius * (imageProportion + spaceProportion * ripple.fraction)
             paint.strokeWidth = strokeWidth
