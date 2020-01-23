@@ -17,7 +17,7 @@ class AudioRecorder(private val config: AudioConfig = AudioConfig()) {
     private var isStart = false
     private var audioRecordThread: AudioRecordThread? = null
 
-    private var comsumer: IAudioConsumer? = null
+    private var consumer: IAudioConsumer? = null
     private var consumerFactory: IAudioConsumerFactory? = null
 
     fun setConsumerFactory(factory: IAudioConsumerFactory) {
@@ -42,7 +42,7 @@ class AudioRecorder(private val config: AudioConfig = AudioConfig()) {
             ex.printStackTrace()
         }
 
-        comsumer = consumerFactory?.createConsumer(config)
+        consumer = consumerFactory?.createConsumer(config)
         audioRecordThread = AudioRecordThread()
         audioRecordThread?.start()
 
@@ -71,7 +71,7 @@ class AudioRecorder(private val config: AudioConfig = AudioConfig()) {
 
         private fun performStart() {
             Log.d(TAG, "AudioRecordThread performStart")
-            comsumer?.start()
+            consumer?.start()
 
             audioRecord?.startRecording()
         }
@@ -80,14 +80,14 @@ class AudioRecorder(private val config: AudioConfig = AudioConfig()) {
             performStart()
             while (isStart) {
                 val size = audioRecord?.read(audioBuffer, 0, audioBuffer.size) ?: 0
-                if (comsumer != null && size > 0) {
-                    comsumer?.consume(audioBuffer, size, false)
+                if (consumer != null && size > 0) {
+                    consumer?.consume(audioBuffer, size, false)
                 }
             }
             // 再读一次打上 end 标记
             val size = audioRecord?.read(audioBuffer, 0, audioBuffer.size) ?: 0
-            if (comsumer != null && size > 0) {
-                comsumer?.consume(audioBuffer, size, true)
+            if (consumer != null && size > 0) {
+                consumer?.consume(audioBuffer, size, true)
             }
             performStop()
         }
@@ -98,8 +98,8 @@ class AudioRecorder(private val config: AudioConfig = AudioConfig()) {
             audioRecord?.release()
             audioRecord = null
 
-            comsumer?.stop()
-            comsumer = null
+            consumer?.stop()
+            consumer = null
         }
     }
 
