@@ -31,6 +31,7 @@ import com.dthfish.fishrecorder.video.IVideoPackerFactory
 import com.dthfish.fishrecorder.video.bean.VideoConfig
 import com.dthfish.fishrecorder.video.opengl.filter.AFilter
 import com.dthfish.fishrecorder.video.opengl.filter.GaryFilter
+import com.dthfish.fishrecorder.video.opengl.filter.LutFilter
 import com.dthfish.fishrecorder.video.opengl.filter.WatermarkFilter
 import kotlinx.android.synthetic.main.activity_record_with_filter.*
 import kotlin.math.abs
@@ -125,6 +126,10 @@ class RecordWidthFilterActivity : AppCompatActivity(), TextureView.SurfaceTextur
         // 第一个为空为了方便坐标计算
         filterList.add(null)
         filterList.add(GaryFilter())
+        // lut_brightly 鲜艳
+        filterList.add(LutFilter(this, R.drawable.lut_brightly))
+//        R.drawable.lut_origin 用来检查 LutFilter 片元着色器代码是否有误
+//        filterList.add(LutFilter(this, R.drawable.lut_origin))
 
         val dataList = arrayListOf(
             R.drawable.icon_watermark_unuse,

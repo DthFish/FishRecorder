@@ -39,8 +39,6 @@ class WatermarkFilter(
         watermarkTextureId = GLUtil.createBitmapTextureID(bitmap)
         watermark.setTextureId(watermarkTextureId)
         bitmap.recycle()
-
-
     }
 
     override fun draw() {

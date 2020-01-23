@@ -56,7 +56,7 @@ open class AFilter {
     protected var width = 0
     protected var height = 0
 
-    private var program = 0
+    protected var program = 0
     private var positionLoc = 0
     private var matrixLoc = 0
     private var textureCoordLoc = 0
